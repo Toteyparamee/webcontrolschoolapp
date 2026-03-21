@@ -61,9 +61,15 @@ export const getHeaders = (token = null) => {
   return headers;
 };
 
-// Helper function: ดึง token จาก localStorage
+// Helper function: ดึง token จาก sessionStorage
 export const getToken = () => {
-  return localStorage.getItem('access_token');
+  return sessionStorage.getItem('access_token');
+};
+
+// ฟังก์ชัน refresh token (ลงทะเบียนจาก AuthContext)
+let _tokenRefresher = null;
+export const setTokenRefresher = (fn) => {
+  _tokenRefresher = fn;
 };
 
 // Helper function: จัดการ response
@@ -77,21 +83,31 @@ export const handleResponse = async (response) => {
   return data;
 };
 
-// Helper function: API request wrapper
+// Helper function: API request wrapper (พร้อม auto-refresh on 401)
 export const apiRequest = async (url, options = {}) => {
   const token = options.token || getToken();
 
-  const config = {
-    method: options.method || 'GET',
-    headers: getHeaders(token),
-    ...options,
+  const buildConfig = (t) => {
+    const cfg = {
+      method: options.method || 'GET',
+      headers: getHeaders(t),
+    };
+    if (options.body && typeof options.body === 'object') {
+      cfg.body = JSON.stringify(options.body);
+    }
+    return cfg;
   };
 
-  if (options.body && typeof options.body === 'object') {
-    config.body = JSON.stringify(options.body);
+  let response = await fetch(url, buildConfig(token));
+
+  // ถ้าได้ 401 และมี refresher → ลอง refresh แล้ว retry ครั้งเดียว
+  if (response.status === 401 && _tokenRefresher) {
+    const newToken = await _tokenRefresher();
+    if (newToken) {
+      response = await fetch(url, buildConfig(newToken));
+    }
   }
 
-  const response = await fetch(url, config);
   return handleResponse(response);
 };
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import { setTokenRefresher } from '../api/config';
 
 const AuthContext = createContext(null);
 
@@ -32,6 +33,11 @@ export const AuthProvider = ({ children }) => {
     }
     // บอกว่าโหลดเสร็จแล้ว ก่อนที่ ProtectedRoute จะตัดสินใจ
     setIsInitialized(true);
+  }, []);
+
+  // ลงทะเบียน getValidToken ให้ apiRequest ใช้ auto-refresh
+  useEffect(() => {
+    setTokenRefresher(getValidToken);
   }, []);
 
   const login = async (username, password) => {
