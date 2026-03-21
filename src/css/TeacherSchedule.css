@@ -1,0 +1,382 @@
+.teacher-schedule {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eee;
+}
+
+.schedule-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 24px;
+}
+
+/* Teacher Filter */
+.teacher-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.teacher-filter label {
+  font-weight: 600;
+  color: #555;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.teacher-dropdown {
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 15px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #333;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.teacher-dropdown:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.teacher-dropdown:hover {
+  border-color: #667eea;
+}
+
+/* Empty State */
+.schedule-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.schedule-empty-state .empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.schedule-empty-state p {
+  color: #999;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Loading */
+.schedule-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 15px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.schedule-loading p {
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* View Content */
+.schedule-view-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Teacher Info */
+.schedule-teacher-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea15, #764ba215);
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.teacher-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.teacher-name-display {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Legend */
+.schedule-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 13px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Schedule Table */
+.schedule-table-wrapper {
+  overflow: auto;
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 800px;
+}
+
+.schedule-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.schedule-table th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 14px 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.schedule-table th.time-column {
+  min-width: 120px;
+}
+
+.time-cell {
+  background: #f8f9fa;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px 10px;
+  border: 1px solid #e0e0e0;
+  vertical-align: middle;
+}
+
+.time-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.time-label .period {
+  font-size: 12px;
+  color: #667eea;
+  font-weight: 700;
+}
+
+.time-label .time {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Schedule Cells */
+.schedule-cell {
+  border: 1px solid #e8e8e8;
+  padding: 0;
+  text-align: center;
+  min-height: 80px;
+  height: 80px;
+  vertical-align: middle;
+}
+
+.schedule-cell.empty {
+  background-color: #fafafa;
+}
+
+.schedule-cell.filled {
+  background-color: #fff;
+  padding: 0;
+}
+
+.empty-cell-text {
+  color: #ddd;
+  font-size: 14px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Scheduled Subject */
+.scheduled-subject {
+  padding: 8px 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.scheduled-subject .subject-code {
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+.scheduled-subject .subject-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.scheduled-subject .subject-detail {
+  font-size: 11px;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.scheduled-subject .subject-room {
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Lunch Break */
+.lunch-break-row {
+  background-color: #fff3cd;
+}
+
+.lunch-time {
+  background: #ffeaa7 !important;
+  border: 1px solid #fdcb6e !important;
+}
+
+.lunch-time .period {
+  color: #d68910 !important;
+}
+
+.lunch-time .time {
+  color: #b7791f !important;
+}
+
+.lunch-cell {
+  background: #fff9e6;
+  text-align: center;
+  padding: 12px;
+  font-weight: 600;
+  color: #d68910;
+  border: 1px solid #fdcb6e;
+  font-size: 13px;
+}
+
+/* Summary */
+.schedule-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.summary-label {
+  font-size: 13px;
+  color: #888;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .schedule-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .teacher-filter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .teacher-dropdown {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .schedule-summary {
+    flex-direction: column;
+  }
+}

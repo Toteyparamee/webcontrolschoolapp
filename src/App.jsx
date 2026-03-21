@@ -1,0 +1,76 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { SchoolProvider } from './context/SchoolContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
+import SchoolDetail from './pages/SchoolDetail';
+import PersonnelManagementPage from './pages/PersonnelManagementPage';
+import UserManagementPage from './pages/UserManagementPage';
+import SystemSettingsPage from './pages/SystemSettingsPage';
+import BehaviorScorePage from './pages/BehaviorScorePage';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <SchoolProvider>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/school/:schoolId"
+              element={
+                <ProtectedRoute>
+                  <SchoolDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/personnel"
+              element={
+                <ProtectedRoute>
+                  <PersonnelManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <UserManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <SystemSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/behavior"
+              element={
+                <ProtectedRoute>
+                  <BehaviorScorePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </SchoolProvider>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
