@@ -19,6 +19,12 @@ export const studentAPI = {
     });
   },
 
+  // Get student by ID
+  async getStudent(id, token) {
+    const url = buildURL('PERSONNEL', `/api/v1/students/${id}`);
+    return apiRequest(url, { token });
+  },
+
   // Delete student
   async deleteStudent(id, token) {
     const url = buildURL('PERSONNEL', `/api/v1/students/${id}`);

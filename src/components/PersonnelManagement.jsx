@@ -2,6 +2,7 @@ import { useState } from 'react';
 import StudentForm from './StudentForm';
 import TeacherForm from './TeacherForm';
 import StudentBatchUploadForm from './StudentBatchUploadForm';
+import StudentDetailModal from './StudentDetailModal';
 import ScheduleManagement from './ScheduleManagement';
 import BehaviorManagement from './BehaviorManagement';
 import '../css/PersonnelManagement.css';
@@ -21,6 +22,7 @@ const PersonnelManagement = ({
   const [showBatchUploadForm, setShowBatchUploadForm] = useState(false);
   const [showAddStudentMenu, setShowAddStudentMenu] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   const handleAddStudent = (studentData, classroomId) => {
     onAddStudent(classroomId, studentData);
@@ -153,8 +155,8 @@ const PersonnelManagement = ({
                   <div className="students-list">
                   {classroom.students.map((student) => (
                     <div key={student.id} className="person-item">
-                      <div className="person-info">
-                        <div className="person-name">
+                      <div className="person-info" onClick={() => setSelectedStudentId(student.id)} style={{ cursor: 'pointer' }}>
+                        <div className="person-name student-name-link">
                           {student.studentNumber}. {student.firstNameTh} {student.lastNameTh}
                         </div>
                         <div className="person-detail">รหัส: {student.studentId}</div>
@@ -285,6 +287,12 @@ const PersonnelManagement = ({
           <BehaviorManagement />
         </div>
       )}
+
+      <StudentDetailModal
+        isOpen={!!selectedStudentId}
+        onClose={() => setSelectedStudentId(null)}
+        studentId={selectedStudentId}
+      />
     </div>
   );
 };
