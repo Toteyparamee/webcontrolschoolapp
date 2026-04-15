@@ -19,6 +19,9 @@ const UserManagementPage = () => {
     schoolId: '',
     schoolName: ''
   });
+  const [filterRole, setFilterRole] = useState('all');
+  const [filterClass, setFilterClass] = useState('all');
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -111,6 +114,25 @@ const UserManagementPage = () => {
     });
   };
 
+  // Filter users
+  const filteredUsers = users.filter((u) => {
+    if (filterRole !== 'all' && u.role !== filterRole) return false;
+    if (filterClass !== 'all' && u.className !== filterClass) return false;
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      return (
+        u.username?.toLowerCase().includes(search) ||
+        u.email?.toLowerCase().includes(search) ||
+        u.firstName?.toLowerCase().includes(search) ||
+        u.lastName?.toLowerCase().includes(search)
+      );
+    }
+    return true;
+  });
+
+  // Get unique class names from users
+  const classNames = [...new Set(users.filter(u => u.className).map(u => u.className))].sort();
+
   const getRoleBadgeClass = (role) => {
     switch (role) {
       case 'admin':
@@ -163,7 +185,7 @@ const UserManagementPage = () => {
           <div className="page-header-simple">
             <h1>จัดการผู้ใช้</h1>
             <div className="header-info">
-              <span>ผู้ใช้งานทั้งหมด: {users.length} คน</span>
+              <span>ผู้ใช้งานทั้งหมด: {users.length} คน {filterRole !== 'all' || filterClass !== 'all' || searchText ? `(แสดง ${filteredUsers.length} คน)` : ''}</span>
             </div>
           </div>
 
@@ -179,6 +201,48 @@ const UserManagementPage = () => {
               className="btn-add"
             >
               {showAddForm ? 'ยกเลิก' : '+ เพิ่มผู้ใช้'}
+            </button>
+          )}
+        </div>
+
+        <div className="filter-bar">
+          <div className="filter-group">
+            <label>ค้นหา</label>
+            <input
+              type="text"
+              placeholder="ชื่อผู้ใช้, อีเมล..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="filter-input"
+            />
+          </div>
+          <div className="filter-group">
+            <label>บทบาท</label>
+            <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="filter-select">
+              <option value="all">ทั้งหมด</option>
+              <option value="admin">ผู้ดูแลระบบ</option>
+              <option value="teacher">ครู</option>
+              <option value="student">นักเรียน</option>
+              <option value="editor">ผู้แก้ไข</option>
+            </select>
+          </div>
+          {classNames.length > 0 && (
+            <div className="filter-group">
+              <label>ห้องเรียน</label>
+              <select value={filterClass} onChange={(e) => setFilterClass(e.target.value)} className="filter-select">
+                <option value="all">ทั้งหมด</option>
+                {classNames.map((cn) => (
+                  <option key={cn} value={cn}>{cn}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {(filterRole !== 'all' || filterClass !== 'all' || searchText) && (
+            <button
+              className="btn-clear-filter"
+              onClick={() => { setFilterRole('all'); setFilterClass('all'); setSearchText(''); }}
+            >
+              ล้างตัวกรอง
             </button>
           )}
         </div>
@@ -273,7 +337,7 @@ const UserManagementPage = () => {
         )}
 
         <div className="users-grid">
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <div key={user.id} className="user-card">
               <div className="user-header">
                 <div className="user-title">
@@ -330,9 +394,9 @@ const UserManagementPage = () => {
           ))}
         </div>
 
-        {users.length === 0 && (
+        {filteredUsers.length === 0 && (
           <div className="empty-state">
-            <p>ยังไม่มีผู้ใช้ในระบบ</p>
+            <p>{users.length === 0 ? 'ยังไม่มีผู้ใช้ในระบบ' : 'ไม่พบผู้ใช้ตามเงื่อนไขที่เลือก'}</p>
           </div>
         )}
       </div>

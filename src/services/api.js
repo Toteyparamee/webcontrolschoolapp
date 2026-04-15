@@ -18,15 +18,7 @@ console.log('🔧 API Configuration:', {
 });
 
 // Helper function: สร้าง URL ตาม environment
-// Development: http://localhost:8080/server/login
-// Production (Kong): http://localhost:8000/login-service/server/login
 const buildURL = (service, path) => {
-  if (USE_KONG) {
-    // เมื่อใช้ Kong ต้องเพิ่ม service prefix
-    const servicePrefix = service === 'LOGIN' ? 'login-service' : 'personnel-service';
-    return `${API_BASE_URL[service]}/${servicePrefix}${path}`;
-  }
-  // Development: เรียกตรง
   return `${API_BASE_URL[service]}${path}`;
 };
 

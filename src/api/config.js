@@ -39,12 +39,6 @@ export const API_CONFIG = {
 // Helper function: สร้าง URL ตาม environment
 export const buildURL = (service, path) => {
   const baseUrl = API_CONFIG.BASE_URLS[service];
-
-  if (API_CONFIG.USE_KONG) {
-    const servicePrefix = API_CONFIG.SERVICE_PREFIX[service];
-    return `${baseUrl}/${servicePrefix}${path}`;
-  }
-
   return `${baseUrl}${path}`;
 };
 
