@@ -1,8 +1,8 @@
 // ตรวจสอบว่าใช้ Kong Gateway หรือเรียก Backend โดยตรง
 const USE_KONG = import.meta.env.VITE_USE_KONG === 'true';
-const KONG_GATEWAY_URL = import.meta.env.VITE_KONG_GATEWAY_URL || 'http://localhost:8000';
-const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'http://localhost:8080';
-const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'http://localhost:8082';
+const KONG_GATEWAY_URL = import.meta.env.VITE_KONG_GATEWAY_URL || 'https://schoolapp.parameedev.online';
+const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'https://schoolapp.parameedev.online';
+const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'https://schoolapp.parameedev.online';
 
 // ถ้าใช้ Kong = ทุก request ผ่าน Gateway
 // ถ้าไม่ใช้ Kong = เรียก Backend โดยตรง

@@ -2,13 +2,13 @@
 
 // Environment variables
 const USE_KONG = import.meta.env.VITE_USE_KONG === 'true';
-const KONG_GATEWAY_URL = import.meta.env.VITE_KONG_GATEWAY_URL || 'http://localhost:8000';
+const KONG_GATEWAY_URL = import.meta.env.VITE_KONG_GATEWAY_URL || 'https://schoolapp.parameedev.online';
 
 // Backend URLs
-const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'http://localhost:8080';
-const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'http://localhost:8082';
-const SCHEDULE_API_URL = import.meta.env.VITE_SCHEDULE_API_URL || 'http://localhost:8083';
-const BEHAVIOR_API_URL = import.meta.env.VITE_BEHAVIOR_API_URL || 'http://localhost:8084';
+const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'https://schoolapp.parameedev.online';
+const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'https://schoolapp.parameedev.online';
+const SCHEDULE_API_URL = import.meta.env.VITE_SCHEDULE_API_URL || 'https://schoolapp.parameedev.online';
+const BEHAVIOR_API_URL = import.meta.env.VITE_BEHAVIOR_API_URL || 'https://schoolapp.parameedev.online';
 
 // Service configuration
 export const API_CONFIG = {
