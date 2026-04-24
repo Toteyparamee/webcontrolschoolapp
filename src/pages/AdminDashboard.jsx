@@ -1,9 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSchool } from '../context/SchoolContext';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import '../css/AdminDashboard.css';
+
+// ดึง school_id จาก JWT payload
+const getSchoolIdFromToken = () => {
+  const token = sessionStorage.getItem('access_token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.school_id ?? null;
+  } catch {
+    return null;
+  }
+};
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -12,12 +24,11 @@ const AdminDashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSchool, setNewSchool] = useState({ name: '', address: '' });
 
-  // Redirect editor to their school directly
-  useEffect(() => {
-    if (user?.role === 'editor' && user?.schoolId) {
-      navigate(`/school/${user.schoolId}`);
-    }
-  }, [user, navigate]);
+  const isAdmin = user?.role === 'admin';
+  const editorSchoolId = !isAdmin ? getSchoolIdFromToken() : null;
+  const visibleSchools = isAdmin
+    ? schools
+    : schools.filter((s) => s.id === editorSchoolId);
 
 
   const handleAddSchool = async (e) => {
@@ -91,7 +102,7 @@ const AdminDashboard = () => {
         )}
 
         <div className="schools-grid">
-          {schools.map((school) => (
+          {visibleSchools.map((school) => (
             <div key={school.id} className="school-card">
               <div className="school-info">
                 <h3>{school.name}</h3>
@@ -115,7 +126,7 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {schools.length === 0 && (
+        {visibleSchools.length === 0 && (
           <div className="empty-state">
             <p>ยังไม่มีโรงเรียนในระบบ</p>
           </div>

@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSchool } from '../context/SchoolContext';
+import { useAuth } from '../context/AuthContext';
 import StudentForm from '../components/StudentForm';
 import TeacherForm from '../components/TeacherForm';
 import ClassroomForm from '../components/ClassroomForm';
@@ -9,12 +10,36 @@ import Modal from '../components/Modal';
 import Sidebar from '../components/Sidebar';
 import '../css/PersonnelManagementPage.css';
 
+// ดึง school_id จาก JWT payload
+const getSchoolIdFromToken = () => {
+  const token = sessionStorage.getItem('access_token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.school_id ?? null;
+  } catch {
+    return null;
+  }
+};
+
 const PersonnelManagementPage = () => {
   console.log('🏫 PersonnelManagementPage rendered');
 
   const { schools, addStudent, addStudentsBatch, deleteStudent, addTeacher, deleteTeacher, addClassroom, updateClassroom } = useSchool();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const editorSchoolId = !isAdmin ? getSchoolIdFromToken() : null;
   const [activeTab, setActiveTab] = useState('students');
-  const [selectedSchool, setSelectedSchool] = useState(schools[0]?.id || null);
+  const [selectedSchool, setSelectedSchool] = useState(
+    !isAdmin && editorSchoolId ? editorSchoolId : schools[0]?.id || null
+  );
+
+  // สำหรับ editor — ล็อค school ให้เป็นของตัวเองเสมอ (กรณี schools โหลดทีหลัง)
+  useEffect(() => {
+    if (!isAdmin && editorSchoolId && selectedSchool !== editorSchoolId) {
+      setSelectedSchool(editorSchoolId);
+    }
+  }, [isAdmin, editorSchoolId, selectedSchool]);
   const [showAddClassroomForm, setShowAddClassroomForm] = useState(false);
   const [editingClassroom, setEditingClassroom] = useState(null);
   const [showAddStudentForm, setShowAddStudentForm] = useState(null);
@@ -144,7 +169,7 @@ const PersonnelManagementPage = () => {
         <div className="page-container">
           <div className="page-header-simple">
             <h1>จัดการบุคลากร</h1>
-            {schools.length > 1 && (
+            {isAdmin && schools.length > 1 && (
               <div className="school-selector">
                 <label>เลือกโรงเรียน:</label>
                 <select
