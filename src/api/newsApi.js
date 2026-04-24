@@ -44,7 +44,7 @@ export const newsAPI = {
     if (!response.ok) {
       throw new Error(data.message || data.error || 'Failed to upload image');
     }
-    return data;
+    return data.data || data;
   },
 
   // แปลง relative URL (/api/news/files/...) → absolute URL พร้อม host
