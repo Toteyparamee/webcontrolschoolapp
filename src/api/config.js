@@ -9,6 +9,7 @@ const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'https://schoolapp.p
 const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'https://schoolapp.parameedev.online';
 const SCHEDULE_API_URL = import.meta.env.VITE_SCHEDULE_API_URL || 'https://schoolapp.parameedev.online';
 const BEHAVIOR_API_URL = import.meta.env.VITE_BEHAVIOR_API_URL || 'https://schoolapp.parameedev.online';
+const NEWS_API_URL = import.meta.env.VITE_NEWS_API_URL || 'https://schoolapp.parameedev.online';
 
 // Service configuration
 export const API_CONFIG = {
@@ -20,6 +21,7 @@ export const API_CONFIG = {
     PERSONNEL: USE_KONG ? KONG_GATEWAY_URL : PERSONNEL_API_URL,
     SCHEDULE: USE_KONG ? KONG_GATEWAY_URL : SCHEDULE_API_URL,
     BEHAVIOR: USE_KONG ? KONG_GATEWAY_URL : BEHAVIOR_API_URL,
+    NEWS: USE_KONG ? KONG_GATEWAY_URL : NEWS_API_URL,
   },
 
   // Service prefixes สำหรับ Kong Gateway
@@ -28,6 +30,7 @@ export const API_CONFIG = {
     PERSONNEL: 'personnel-service',
     SCHEDULE: 'schedule-service',
     BEHAVIOR: 'behavior-service',
+    NEWS: 'news-service',
   },
 
   // Default settings
@@ -113,6 +116,7 @@ if (import.meta.env.DEV) {
     PERSONNEL: API_CONFIG.BASE_URLS.PERSONNEL,
     SCHEDULE: API_CONFIG.BASE_URLS.SCHEDULE,
     BEHAVIOR: API_CONFIG.BASE_URLS.BEHAVIOR,
+    NEWS: API_CONFIG.BASE_URLS.NEWS,
   });
 }
 

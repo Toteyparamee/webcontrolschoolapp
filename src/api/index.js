@@ -20,3 +20,6 @@ export { default as settingsAPI } from './settingsApi';
 
 // Behavior (คะแนนพฤติกรรม)
 export { categoryAPI, behaviorAPI } from './behaviorApi';
+
+// News (ข่าวสารและประกาศ)
+export { newsAPI } from './newsApi';

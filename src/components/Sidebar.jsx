@@ -32,6 +32,12 @@ const Sidebar = () => {
       roles: ['admin']
     },
     {
+      path: '/news',
+      icon: '📰',
+      label: 'จัดการข่าวสาร',
+      roles: ['admin', 'editor']
+    },
+    {
       path: '/settings',
       icon: '⚙️',
       label: 'ตั้งค่าระบบ',

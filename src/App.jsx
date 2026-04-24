@@ -9,6 +9,7 @@ import PersonnelManagementPage from './pages/PersonnelManagementPage';
 import UserManagementPage from './pages/UserManagementPage';
 import SystemSettingsPage from './pages/SystemSettingsPage';
 import BehaviorScorePage from './pages/BehaviorScorePage';
+import NewsManagementPage from './pages/NewsManagementPage';
 
 function App() {
   return (
@@ -62,6 +63,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <BehaviorScorePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/news"
+              element={
+                <ProtectedRoute>
+                  <NewsManagementPage />
                 </ProtectedRoute>
               }
             />
