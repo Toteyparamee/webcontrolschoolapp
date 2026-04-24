@@ -166,25 +166,39 @@ const NewsManagementPage = () => {
           <div className="news-grid">
             {newsList.map((item) => {
               const imgSrc = newsAPI.resolveImageUrl(item.image_url);
+              const showTitle = item.show_title ?? true;
+              const showDescription = item.show_description ?? true;
+              const showDate = item.show_date ?? true;
+              const showImage = item.show_image ?? true;
+              const c = colorHex(item.color);
+              const hasImage = showImage && imgSrc;
+              const hasGradient = showImage && !imgSrc;
               return (
                 <div key={item.id} className="news-card">
-                  <div
-                    className="news-card-header"
-                    style={{ background: `linear-gradient(135deg, ${colorHex(item.color)}, ${colorHex(item.color)}b3)` }}
-                  >
-                    {imgSrc ? (
+                  {hasImage && (
+                    <div className="news-card-image">
                       <img src={imgSrc} alt="" />
-                    ) : (
-                      <div className="news-card-placeholder">📰</div>
-                    )}
-                    {!item.is_published && <span className="badge-unpublished">ไม่เผยแพร่</span>}
-                  </div>
+                      {!item.is_published && <span className="badge-unpublished">ไม่เผยแพร่</span>}
+                    </div>
+                  )}
+                  {hasGradient && (
+                    <div
+                      className="news-card-gradient"
+                      style={{ background: `linear-gradient(135deg, ${c}, ${c}b3)` }}
+                    >
+                      <span className="news-card-article-icon">📰</span>
+                      {!item.is_published && <span className="badge-unpublished">ไม่เผยแพร่</span>}
+                    </div>
+                  )}
                   <div className="news-card-body">
-                    {item.title && <h3>{item.title}</h3>}
-                    {item.description && <p className="news-desc">{item.description}</p>}
-                    {item.date && (
-                      <div className="news-date" style={{ color: colorHex(item.color) }}>
-                        📅 {item.date}
+                    {showTitle && item.title && <h3 className="news-title">{item.title}</h3>}
+                    {showDescription && item.description && (
+                      <p className="news-desc">{item.description}</p>
+                    )}
+                    {showDate && item.date && (
+                      <div className="news-date" style={{ color: c }}>
+                        <span className="date-icon">📅</span>
+                        <span>{item.date}</span>
                       </div>
                     )}
                     <div className="news-card-actions">
@@ -192,6 +206,7 @@ const NewsManagementPage = () => {
                         className="btn-icon"
                         onClick={() => handleTogglePublish(item)}
                         title={item.is_published ? 'ซ่อน' : 'เผยแพร่'}
+                        style={{ color: item.is_published ? '#4CAF50' : '#FF9800' }}
                       >
                         {item.is_published ? '👁️' : '🚫'}
                       </button>
