@@ -11,6 +11,7 @@ const PersonnelManagement = ({
   school,
   onAddStudent,
   onAddStudentsBatch,
+  onUpdateStudent,
   onDeleteStudent,
   onAddTeacher,
   onUpdateTeacher,
@@ -157,7 +158,7 @@ const PersonnelManagement = ({
                     <div key={student.id} className="person-item">
                       <div className="person-info" onClick={() => setSelectedStudentId(student.id)} style={{ cursor: 'pointer' }}>
                         <div className="person-name student-name-link">
-                          {student.studentNumber}. {student.firstNameTh} {student.lastNameTh}
+                          {student.studentNumber ?? '-'}. {student.firstNameTh} {student.lastNameTh}
                         </div>
                         <div className="person-detail">รหัส: {student.studentId}</div>
                         <div className="person-detail">
@@ -165,6 +166,35 @@ const PersonnelManagement = ({
                         </div>
                         <div className="person-detail">Tel: {student.phone}</div>
                       </div>
+                      <button
+                        onClick={async () => {
+                          const current = student.studentNumber ?? '';
+                          const input = window.prompt(
+                            `แก้เลขที่นักเรียน "${student.firstNameTh} ${student.lastNameTh}"\n(ใส่เลขจำนวนเต็ม หรือว่างเพื่อล้าง)`,
+                            String(current)
+                          );
+                          if (input === null) return; // user cancelled
+                          const trimmed = input.trim();
+                          let value = null;
+                          if (trimmed !== '') {
+                            const n = parseInt(trimmed, 10);
+                            if (isNaN(n) || n < 1) {
+                              alert('กรุณาใส่เลขจำนวนเต็มที่มากกว่า 0');
+                              return;
+                            }
+                            value = n;
+                          }
+                          try {
+                            await onUpdateStudent(classroom.id, student.id, { student_number: value });
+                          } catch (err) {
+                            alert('แก้ไขเลขที่ล้มเหลว: ' + (err.message || err));
+                          }
+                        }}
+                        className="btn-edit"
+                        style={{ marginRight: 4 }}
+                      >
+                        แก้เลขที่
+                      </button>
                       <button
                         onClick={() => onDeleteStudent(classroom.id, student.id)}
                         className="btn-delete"

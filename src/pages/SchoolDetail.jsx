@@ -5,7 +5,7 @@ import '../css/SchoolDetail.css';
 
 const SchoolDetail = () => {
   const { schoolId } = useParams();
-  const { schools, addStudent, addStudentsBatch, deleteStudent, addTeacher, updateTeacher, deleteTeacher, addClassroom } = useSchool();
+  const { schools, addStudent, addStudentsBatch, updateStudent, deleteStudent, addTeacher, updateTeacher, deleteTeacher, addClassroom } = useSchool();
   const navigate = useNavigate();
 
   const school = schools.find(s => s.id === parseInt(schoolId));
@@ -29,6 +29,10 @@ const SchoolDetail = () => {
     if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบนักเรียนคนนี้?')) {
       deleteStudent(school.id, classroomId, studentId);
     }
+  };
+
+  const handleUpdateStudent = (classroomId, studentId, body) => {
+    return updateStudent(school.id, classroomId, studentId, body);
   };
 
   const handleAddTeacher = (teacherData) => {
@@ -66,6 +70,7 @@ const SchoolDetail = () => {
           school={school}
           onAddStudent={handleAddStudent}
           onAddStudentsBatch={handleAddStudentsBatch}
+          onUpdateStudent={handleUpdateStudent}
           onDeleteStudent={handleDeleteStudent}
           onAddTeacher={handleAddTeacher}
           onUpdateTeacher={handleUpdateTeacher}

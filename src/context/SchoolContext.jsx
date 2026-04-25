@@ -49,7 +49,7 @@ export const SchoolProvider = ({ children }) => {
                         students = studentsResponse.data.students.map(student => ({
                           id: student.id,
                           studentId: student.student_code,
-                          studentNumber: 0,
+                          studentNumber: student.student_number ?? null,
                           firstNameTh: student.first_name_th,
                           lastNameTh: student.last_name_th,
                           firstNameEn: student.first_name_en || '',
@@ -298,6 +298,38 @@ export const SchoolProvider = ({ children }) => {
     }));
   };
 
+  // updateStudent - แก้ไขข้อมูลนักเรียน (admin/editor)
+  // body ใช้ snake_case ตาม backend (เช่น { student_number: 5 })
+  const updateStudent = async (schoolId, classroomId, studentId, body) => {
+    try {
+      const token = await getValidToken();
+      await personnelAPI.updateStudent(studentId, body, token);
+
+      // อัปเดต local state — map snake_case → camelCase สำหรับ field ที่ UI ใช้
+      setSchools(schools.map(school => {
+        if (school.id !== schoolId) return school;
+        return {
+          ...school,
+          classrooms: school.classrooms.map(classroom => {
+            if (classroom.id !== classroomId) return classroom;
+            return {
+              ...classroom,
+              students: classroom.students.map(s => {
+                if (s.id !== studentId) return s;
+                const next = { ...s };
+                if ('student_number' in body) next.studentNumber = body.student_number;
+                return next;
+              })
+            };
+          })
+        };
+      }));
+    } catch (error) {
+      console.error('Failed to update student:', error);
+      throw error;
+    }
+  };
+
   const addTeacher = async (schoolId, teacher) => {
     try {
       const token = await getValidToken();
@@ -467,6 +499,7 @@ export const SchoolProvider = ({ children }) => {
       deleteSchool,
       addStudent,
       addStudentsBatch,
+      updateStudent,
       deleteStudent,
       addTeacher,
       updateTeacher,

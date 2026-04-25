@@ -212,6 +212,25 @@ export const personnelAPI = {
     return data;
   },
 
+  async updateStudent(id, body, token) {
+    const response = await fetch(buildURL('PERSONNEL', `/api/v1/students/${id}`), {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update student');
+    }
+
+    return data;
+  },
+
   async getPersonnel(token) {
     const response = await fetch(buildURL('PERSONNEL', '/api/personnel'), {
       method: 'GET',

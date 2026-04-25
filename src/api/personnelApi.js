@@ -19,6 +19,16 @@ export const studentAPI = {
     });
   },
 
+  // Update student (admin/editor) - ส่ง partial fields ได้
+  async updateStudent(id, data, token) {
+    const url = buildURL('PERSONNEL', `/api/v1/students/${id}`);
+    return apiRequest(url, {
+      method: 'PUT',
+      body: data,
+      token,
+    });
+  },
+
   // Get student by ID
   async getStudent(id, token) {
     const url = buildURL('PERSONNEL', `/api/v1/students/${id}`);
