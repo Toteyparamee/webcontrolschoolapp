@@ -38,6 +38,12 @@ const Sidebar = () => {
       roles: ['admin', 'editor']
     },
     {
+      path: '/behavior',
+      icon: '⭐',
+      label: 'คะแนนพฤติกรรม',
+      roles: ['admin', 'editor']
+    },
+    {
       path: '/settings',
       icon: '⚙️',
       label: 'ตั้งค่าระบบ',
