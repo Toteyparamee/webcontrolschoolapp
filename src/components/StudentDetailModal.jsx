@@ -5,11 +5,33 @@ import { userAPI } from '../api/authApi';
 import { getToken } from '../api/config';
 import '../css/StudentDetailModal.css';
 
-const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
+// fields ที่ส่งเป็นตัวเลขเข้า backend (parseFloat ก่อนส่ง)
+const NUMBER_FIELDS = new Set([
+  'student_number', 'child_order',
+  'older_brothers', 'younger_brothers', 'older_sisters', 'younger_sisters',
+  'weight', 'height', 'travel_time',
+  'father_monthly_income', 'mother_monthly_income', 'guardian_monthly_income',
+  'distance_paved_road', 'distance_unpaved_road',
+  'latitude', 'longitude',
+]);
+
+// fields ที่ระบบไม่ให้แก้ (backend ก็ strip ออกอยู่แล้ว แต่ block ที่ frontend ก่อน)
+const READONLY_FIELDS = new Set(['id', 'student_code', 'created_at', 'updated_at', 'deleted_at']);
+
+const dateInputValue = (iso) => {
+  if (!iso) return '';
+  return String(iso).split('T')[0];
+};
+
+const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('general');
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [saving, setSaving] = useState(false);
 
   // Password tab state
   const [userAccount, setUserAccount] = useState(null);
@@ -30,6 +52,8 @@ const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
       setNewPassword('');
       setConfirmPassword('');
       setPasswordMsg(null);
+      setIsEditing(false);
+      setFormData({});
     }
   }, [isOpen, studentId]);
 
@@ -39,7 +63,9 @@ const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
     try {
       const token = getToken();
       const res = await studentAPI.getStudent(studentId, token);
-      setStudent(res.data || res);
+      const data = res.data || res;
+      setStudent(data);
+      setFormData(data);
     } catch (err) {
       setError(err.message || 'ไม่สามารถโหลดข้อมูลนักเรียนได้');
     } finally {
@@ -125,7 +151,7 @@ const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
       const token = getToken();
       if (userAccount) {
         await userAPI.updateUser(userAccount.id, { password: newPassword }, token);
-        setPasswordMsg({ type: 'success', text: 'เปลี่ยนรหัสผ่า���สำเร็จ' });
+        setPasswordMsg({ type: 'success', text: 'เปลี่ยนรหัสผ่านสำเร็จ' });
       } else {
         await userAPI.createUser({
           username: student.student_code,
@@ -148,6 +174,73 @@ const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
     }
   };
 
+  // ---- Edit mode handlers ----
+
+  const handleStartEdit = () => {
+    setFormData(student || {});
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setFormData(student || {});
+    setIsEditing(false);
+  };
+
+  const handleFieldChange = (key, value) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!onUpdate) {
+      alert('ไม่สามารถบันทึกได้: ระบบไม่ได้ตั้งค่า callback');
+      return;
+    }
+    // build diff: เฉพาะ field ที่เปลี่ยน, ไม่รวม readonly fields
+    const body = {};
+    for (const [key, newVal] of Object.entries(formData)) {
+      if (READONLY_FIELDS.has(key)) continue;
+      const oldVal = student?.[key];
+      // ปรับ '' → null สำหรับเทียบ
+      const normalizedNew = newVal === '' ? null : newVal;
+      const normalizedOld = oldVal === '' || oldVal === undefined ? null : oldVal;
+      if (JSON.stringify(normalizedNew) === JSON.stringify(normalizedOld)) continue;
+
+      if (NUMBER_FIELDS.has(key)) {
+        if (normalizedNew === null) {
+          body[key] = null;
+        } else {
+          const n = Number(normalizedNew);
+          if (Number.isNaN(n)) {
+            alert(`ค่าของ "${key}" ต้องเป็นตัวเลข`);
+            return;
+          }
+          body[key] = n;
+        }
+      } else {
+        body[key] = normalizedNew;
+      }
+    }
+
+    if (Object.keys(body).length === 0) {
+      setIsEditing(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onUpdate(body);
+      // refresh จาก backend เพื่อ get ค่าใหม่จริง
+      await fetchStudent();
+      setIsEditing(false);
+    } catch (err) {
+      alert('บันทึกล้มเหลว: ' + (err.message || err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ---- Render helpers ----
+
   const renderInfoRow = (label, value) => (
     <div className="sdm-info-row">
       <span className="sdm-label">{label}</span>
@@ -155,72 +248,183 @@ const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
     </div>
   );
 
-  const renderGeneralTab = () => (
-    <div className="sdm-section">
-      <h3 className="sdm-section-title">ข้อมูลส่วนตัว</h3>
-      {renderInfoRow('ชื่อ-นามสกุล (ไทย)', `${student.title_th || ''} ${student.first_name_th || ''} ${student.last_name_th || ''}`.trim())}
-      {renderInfoRow('ชื่อ-นามสกุล (อังกฤษ)', `${student.first_name_en || ''} ${student.last_name_en || ''}`.trim() || '-')}
-      {renderInfoRow('รหัสนักเรียน', student.student_code)}
-      {renderInfoRow('เพศ', student.gender)}
-      {renderInfoRow('วันเกิด', formatDate(student.birth_date))}
-      {renderInfoRow('อายุ', formatAge(student.age))}
-      {renderInfoRow('กรุ๊ปเลือด', student.blood_type)}
-      {renderInfoRow('สัญชาติ', student.nationality)}
-      {renderInfoRow('เชื้อชาติ', student.ethnicity)}
-      {renderInfoRow('ศาสนา', student.religion)}
-      {renderInfoRow('จังหวัดที่เกิด', student.birth_province)}
-      {renderInfoRow('เบอร์โทรศัพท์', student.current_phone)}
-
-      <h3 className="sdm-section-title">ข้อมูลการศึกษา</h3>
-      {renderInfoRow('ชั้น/ห้อง', `${student.grade || '-'}/${student.section || '-'}`)}
-      {renderInfoRow('น้ำหนัก', student.weight ? `${student.weight} กก.` : '-')}
-      {renderInfoRow('ส่วนสูง', student.height ? `${student.height} ซม.` : '-')}
+  const renderEditRow = (label, key, type = 'text') => (
+    <div className="sdm-info-row" key={key}>
+      <span className="sdm-label">{label}</span>
+      <input
+        type={type}
+        className="sdm-edit-input"
+        value={type === 'date' ? dateInputValue(formData[key]) : (formData[key] ?? '')}
+        onChange={(e) => handleFieldChange(key, e.target.value)}
+        style={{
+          flex: 1,
+          padding: '6px 10px',
+          border: '1px solid #ccc',
+          borderRadius: 4,
+          fontSize: 14,
+        }}
+      />
     </div>
   );
 
-  const renderAddressTab = () => (
-    <div className="sdm-section">
-      <h3 className="sdm-section-title">ที่อยู่ตามทะเบียนบ้าน</h3>
-      {renderInfoRow('ที่อยู่', formatAddress(student))}
-      {renderInfoRow('เบอร์โทรศัพท์', student.current_phone)}
+  const renderGeneralTab = () => {
+    if (isEditing) {
+      return (
+        <div className="sdm-section">
+          <h3 className="sdm-section-title">ข้อมูลส่วนตัว</h3>
+          {renderEditRow('คำนำหน้า (ไทย)', 'title_th')}
+          {renderEditRow('ชื่อ (ไทย)', 'first_name_th')}
+          {renderEditRow('นามสกุล (ไทย)', 'last_name_th')}
+          {renderEditRow('ชื่อ (อังกฤษ)', 'first_name_en')}
+          {renderEditRow('นามสกุล (อังกฤษ)', 'last_name_en')}
+          {renderEditRow('เพศ', 'gender')}
+          {renderEditRow('วันเกิด', 'birth_date', 'date')}
+          {renderEditRow('กรุ๊ปเลือด', 'blood_type')}
+          {renderEditRow('สัญชาติ', 'nationality')}
+          {renderEditRow('เชื้อชาติ', 'ethnicity')}
+          {renderEditRow('ศาสนา', 'religion')}
+          {renderEditRow('จังหวัดที่เกิด', 'birth_province')}
+          {renderEditRow('เบอร์โทรศัพท์', 'current_phone')}
 
-      <h3 className="sdm-section-title">ข้อมูลการเดินทาง</h3>
-      {renderInfoRow('ระยะทาง (ถนนลาดยาง)', student.distance_paved_road ? `${student.distance_paved_road} กม.` : '-')}
-      {renderInfoRow('ระยะทาง (ถนนลูกรัง)', student.distance_unpaved_road ? `${student.distance_unpaved_road} กม.` : '-')}
-      {renderInfoRow('เวลาเดินทาง', student.travel_time ? `${student.travel_time} นาที` : '-')}
-      {renderInfoRow('วิธีการเดินทาง', student.travel_method)}
-    </div>
-  );
+          <h3 className="sdm-section-title">ข้อมูลการศึกษา</h3>
+          {renderEditRow('เลขที่ในห้อง', 'student_number', 'number')}
+          {renderEditRow('ชั้น', 'grade')}
+          {renderEditRow('ห้อง', 'section')}
+          {renderEditRow('น้ำหนัก (กก.)', 'weight', 'number')}
+          {renderEditRow('ส่วนสูง (ซม.)', 'height', 'number')}
+        </div>
+      );
+    }
+    return (
+      <div className="sdm-section">
+        <h3 className="sdm-section-title">ข้อมูลส่วนตัว</h3>
+        {renderInfoRow('ชื่อ-นามสกุล (ไทย)', `${student.title_th || ''} ${student.first_name_th || ''} ${student.last_name_th || ''}`.trim())}
+        {renderInfoRow('ชื่อ-นามสกุล (อังกฤษ)', `${student.first_name_en || ''} ${student.last_name_en || ''}`.trim() || '-')}
+        {renderInfoRow('รหัสนักเรียน', student.student_code)}
+        {renderInfoRow('เพศ', student.gender)}
+        {renderInfoRow('วันเกิด', formatDate(student.birth_date))}
+        {renderInfoRow('อายุ', formatAge(student.age))}
+        {renderInfoRow('กรุ๊ปเลือด', student.blood_type)}
+        {renderInfoRow('สัญชาติ', student.nationality)}
+        {renderInfoRow('เชื้อชาติ', student.ethnicity)}
+        {renderInfoRow('ศาสนา', student.religion)}
+        {renderInfoRow('จังหวัดที่เกิด', student.birth_province)}
+        {renderInfoRow('เบอร์โทรศัพท์', student.current_phone)}
 
-  const renderFamilyTab = () => (
-    <div className="sdm-section">
-      <h3 className="sdm-section-title">ข้อมูลบิดา</h3>
-      {renderInfoRow('ชื่อ-นามสกุล', `${student.father_title || ''} ${student.father_first_name || ''} ${student.father_last_name || ''}`.trim() || '-')}
-      {renderInfoRow('อาชีพ', student.father_occupation)}
-      {renderInfoRow('เบอร์โทรศัพท์', student.father_phone)}
-      {renderInfoRow('รายได้ต่อเดือน', student.father_monthly_income ? `${student.father_monthly_income.toLocaleString()} บาท` : '-')}
+        <h3 className="sdm-section-title">ข้อมูลการศึกษา</h3>
+        {renderInfoRow('ชั้น/ห้อง', `${student.grade || '-'}/${student.section || '-'}`)}
+        {renderInfoRow('เลขที่', student.student_number ?? '-')}
+        {renderInfoRow('น้ำหนัก', student.weight ? `${student.weight} กก.` : '-')}
+        {renderInfoRow('ส่วนสูง', student.height ? `${student.height} ซม.` : '-')}
+      </div>
+    );
+  };
 
-      <h3 className="sdm-section-title">ข้อมูลมารดา</h3>
-      {renderInfoRow('ชื่อ-นามสกุล', `${student.mother_title || ''} ${student.mother_first_name || ''} ${student.mother_last_name || ''}`.trim() || '-')}
-      {renderInfoRow('อาชีพ', student.mother_occupation)}
-      {renderInfoRow('เบอร์โทรศัพท์', student.mother_phone)}
+  const renderAddressTab = () => {
+    if (isEditing) {
+      return (
+        <div className="sdm-section">
+          <h3 className="sdm-section-title">ที่อยู่ตามทะเบียนบ้าน</h3>
+          {renderEditRow('บ้านเลขที่', 'house_number')}
+          {renderEditRow('หมู่', 'village_no')}
+          {renderEditRow('ถนน', 'road')}
+          {renderEditRow('ตำบล', 'sub_district')}
+          {renderEditRow('อำเภอ', 'district')}
+          {renderEditRow('จังหวัด', 'province')}
+          {renderEditRow('รหัสไปรษณีย์', 'postal_code')}
+          {renderEditRow('เบอร์โทรศัพท์', 'current_phone')}
 
-      <h3 className="sdm-section-title">ข้อมูลผู้ปกครอง</h3>
-      {renderInfoRow('ชื่อ-นามสกุล', `${student.guardian_title || ''} ${student.guardian_first_name || ''} ${student.guardian_last_name || ''}`.trim() || '-')}
-      {renderInfoRow('ความสัมพันธ์', student.guardian_relationship)}
-      {renderInfoRow('อาชีพ', student.guardian_occupation)}
-      {renderInfoRow('เบอร์โทรศัพท์', student.guardian_phone)}
-      {renderInfoRow('รายได้ต่อเดือน', student.guardian_monthly_income ? `${student.guardian_monthly_income.toLocaleString()} บาท` : '-')}
+          <h3 className="sdm-section-title">ข้อมูลการเดินทาง</h3>
+          {renderEditRow('ระยะทาง (ถนนลาดยาง) กม.', 'distance_paved_road', 'number')}
+          {renderEditRow('ระยะทาง (ถนนลูกรัง) กม.', 'distance_unpaved_road', 'number')}
+          {renderEditRow('เวลาเดินทาง (นาที)', 'travel_time', 'number')}
+          {renderEditRow('วิธีการเดินทาง', 'travel_method')}
+        </div>
+      );
+    }
+    return (
+      <div className="sdm-section">
+        <h3 className="sdm-section-title">ที่อยู่ตามทะเบียนบ้าน</h3>
+        {renderInfoRow('ที่อยู่', formatAddress(student))}
+        {renderInfoRow('เบอร์โทรศัพท์', student.current_phone)}
 
-      <h3 className="sdm-section-title">ข้อมูลพี่น้อง</h3>
-      {renderInfoRow('เป็นบุตรคนที่', student.child_order || '-')}
-      {renderInfoRow('พี่ชาย', student.older_brothers ?? '-')}
-      {renderInfoRow('น้องชาย', student.younger_brothers ?? '-')}
-      {renderInfoRow('พี่สาว', student.older_sisters ?? '-')}
-      {renderInfoRow('น้องสาว', student.younger_sisters ?? '-')}
-      {renderInfoRow('สถานภาพบิดามารดา', student.parents_marital_status)}
-    </div>
-  );
+        <h3 className="sdm-section-title">ข้อมูลการเดินทาง</h3>
+        {renderInfoRow('ระยะทาง (ถนนลาดยาง)', student.distance_paved_road ? `${student.distance_paved_road} กม.` : '-')}
+        {renderInfoRow('ระยะทาง (ถนนลูกรัง)', student.distance_unpaved_road ? `${student.distance_unpaved_road} กม.` : '-')}
+        {renderInfoRow('เวลาเดินทาง', student.travel_time ? `${student.travel_time} นาที` : '-')}
+        {renderInfoRow('วิธีการเดินทาง', student.travel_method)}
+      </div>
+    );
+  };
+
+  const renderFamilyTab = () => {
+    if (isEditing) {
+      return (
+        <div className="sdm-section">
+          <h3 className="sdm-section-title">ข้อมูลบิดา</h3>
+          {renderEditRow('คำนำหน้า', 'father_title')}
+          {renderEditRow('ชื่อ', 'father_first_name')}
+          {renderEditRow('นามสกุล', 'father_last_name')}
+          {renderEditRow('อาชีพ', 'father_occupation')}
+          {renderEditRow('เบอร์โทรศัพท์', 'father_phone')}
+          {renderEditRow('รายได้ต่อเดือน (บาท)', 'father_monthly_income', 'number')}
+
+          <h3 className="sdm-section-title">ข้อมูลมารดา</h3>
+          {renderEditRow('คำนำหน้า', 'mother_title')}
+          {renderEditRow('ชื่อ', 'mother_first_name')}
+          {renderEditRow('นามสกุล', 'mother_last_name')}
+          {renderEditRow('อาชีพ', 'mother_occupation')}
+          {renderEditRow('เบอร์โทรศัพท์', 'mother_phone')}
+
+          <h3 className="sdm-section-title">ข้อมูลผู้ปกครอง</h3>
+          {renderEditRow('คำนำหน้า', 'guardian_title')}
+          {renderEditRow('ชื่อ', 'guardian_first_name')}
+          {renderEditRow('นามสกุล', 'guardian_last_name')}
+          {renderEditRow('ความสัมพันธ์', 'guardian_relationship')}
+          {renderEditRow('อาชีพ', 'guardian_occupation')}
+          {renderEditRow('เบอร์โทรศัพท์', 'guardian_phone')}
+          {renderEditRow('รายได้ต่อเดือน (บาท)', 'guardian_monthly_income', 'number')}
+
+          <h3 className="sdm-section-title">ข้อมูลพี่น้อง</h3>
+          {renderEditRow('เป็นบุตรคนที่', 'child_order', 'number')}
+          {renderEditRow('พี่ชาย', 'older_brothers', 'number')}
+          {renderEditRow('น้องชาย', 'younger_brothers', 'number')}
+          {renderEditRow('พี่สาว', 'older_sisters', 'number')}
+          {renderEditRow('น้องสาว', 'younger_sisters', 'number')}
+          {renderEditRow('สถานภาพบิดามารดา', 'parents_marital_status')}
+        </div>
+      );
+    }
+    return (
+      <div className="sdm-section">
+        <h3 className="sdm-section-title">ข้อมูลบิดา</h3>
+        {renderInfoRow('ชื่อ-นามสกุล', `${student.father_title || ''} ${student.father_first_name || ''} ${student.father_last_name || ''}`.trim() || '-')}
+        {renderInfoRow('อาชีพ', student.father_occupation)}
+        {renderInfoRow('เบอร์โทรศัพท์', student.father_phone)}
+        {renderInfoRow('รายได้ต่อเดือน', student.father_monthly_income ? `${student.father_monthly_income.toLocaleString()} บาท` : '-')}
+
+        <h3 className="sdm-section-title">ข้อมูลมารดา</h3>
+        {renderInfoRow('ชื่อ-นามสกุล', `${student.mother_title || ''} ${student.mother_first_name || ''} ${student.mother_last_name || ''}`.trim() || '-')}
+        {renderInfoRow('อาชีพ', student.mother_occupation)}
+        {renderInfoRow('เบอร์โทรศัพท์', student.mother_phone)}
+
+        <h3 className="sdm-section-title">ข้อมูลผู้ปกครอง</h3>
+        {renderInfoRow('ชื่อ-นามสกุล', `${student.guardian_title || ''} ${student.guardian_first_name || ''} ${student.guardian_last_name || ''}`.trim() || '-')}
+        {renderInfoRow('ความสัมพันธ์', student.guardian_relationship)}
+        {renderInfoRow('อาชีพ', student.guardian_occupation)}
+        {renderInfoRow('เบอร์โทรศัพท์', student.guardian_phone)}
+        {renderInfoRow('รายได้ต่อเดือน', student.guardian_monthly_income ? `${student.guardian_monthly_income.toLocaleString()} บาท` : '-')}
+
+        <h3 className="sdm-section-title">ข้อมูลพี่น้อง</h3>
+        {renderInfoRow('เป็นบุตรคนที่', student.child_order || '-')}
+        {renderInfoRow('พี่ชาย', student.older_brothers ?? '-')}
+        {renderInfoRow('น้องชาย', student.younger_brothers ?? '-')}
+        {renderInfoRow('พี่สาว', student.older_sisters ?? '-')}
+        {renderInfoRow('น้องสาว', student.younger_sisters ?? '-')}
+        {renderInfoRow('สถานภาพบิดามารดา', student.parents_marital_status)}
+      </div>
+    );
+  };
 
   const renderPasswordTab = () => {
     if (userLoading) {
@@ -328,6 +532,30 @@ const StudentDetailModal = ({ isOpen, onClose, studentId }) => {
               <p className="sdm-student-code">รหัส: {student.student_code}</p>
               <p className="sdm-student-class">ชั้น {student.grade}/{student.section}</p>
             </div>
+            {/* ปุ่ม edit/save/cancel — ไม่แสดงในแท็บ password */}
+            {activeTab !== 'password' && (
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                {!isEditing ? (
+                  <button onClick={handleStartEdit} className="sdm-save-btn" style={{ background: '#1976d2' }}>
+                    แก้ไข
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={handleSave} className="sdm-save-btn" disabled={saving}>
+                      {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="sdm-save-btn"
+                      style={{ background: '#9e9e9e' }}
+                      disabled={saving}
+                    >
+                      ยกเลิก
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="sdm-tabs">

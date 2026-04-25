@@ -305,7 +305,19 @@ export const SchoolProvider = ({ children }) => {
       const token = await getValidToken();
       await personnelAPI.updateStudent(studentId, body, token);
 
-      // อัปเดต local state — map snake_case → camelCase สำหรับ field ที่ UI ใช้
+      // map snake_case (backend) → camelCase (UI) เพื่อ sync local state
+      const snakeToCamel = {
+        student_number: 'studentNumber',
+        first_name_th: 'firstNameTh',
+        last_name_th: 'lastNameTh',
+        first_name_en: 'firstNameEn',
+        last_name_en: 'lastNameEn',
+        current_phone: 'phone',
+        house_number: 'address',
+        father_first_name: 'fatherName',
+        mother_first_name: 'motherName',
+      };
+
       setSchools(schools.map(school => {
         if (school.id !== schoolId) return school;
         return {
@@ -317,7 +329,9 @@ export const SchoolProvider = ({ children }) => {
               students: classroom.students.map(s => {
                 if (s.id !== studentId) return s;
                 const next = { ...s };
-                if ('student_number' in body) next.studentNumber = body.student_number;
+                for (const [snake, camel] of Object.entries(snakeToCamel)) {
+                  if (snake in body) next[camel] = body[snake] ?? '';
+                }
                 return next;
               })
             };

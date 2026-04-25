@@ -23,11 +23,16 @@ const PersonnelManagement = ({
   const [showBatchUploadForm, setShowBatchUploadForm] = useState(false);
   const [showAddStudentMenu, setShowAddStudentMenu] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null); // { studentId, classroomId }
 
   const handleAddStudent = (studentData, classroomId) => {
     onAddStudent(classroomId, studentData);
     setShowAddStudentForm(null);
+  };
+
+  const handleStudentUpdate = (body) => {
+    if (!selectedStudent) return Promise.resolve();
+    return onUpdateStudent(selectedStudent.classroomId, selectedStudent.studentId, body);
   };
 
   const handleAddTeacher = (teacherData) => {
@@ -156,7 +161,11 @@ const PersonnelManagement = ({
                   <div className="students-list">
                   {classroom.students.map((student) => (
                     <div key={student.id} className="person-item">
-                      <div className="person-info" onClick={() => setSelectedStudentId(student.id)} style={{ cursor: 'pointer' }}>
+                      <div
+                        className="person-info"
+                        onClick={() => setSelectedStudent({ studentId: student.id, classroomId: classroom.id })}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <div className="person-name student-name-link">
                           {student.studentNumber ?? '-'}. {student.firstNameTh} {student.lastNameTh}
                         </div>
@@ -166,6 +175,13 @@ const PersonnelManagement = ({
                         </div>
                         <div className="person-detail">Tel: {student.phone}</div>
                       </div>
+                      <button
+                        onClick={() => setSelectedStudent({ studentId: student.id, classroomId: classroom.id })}
+                        className="btn-edit"
+                        style={{ marginRight: 4 }}
+                      >
+                        ดูข้อมูล
+                      </button>
                       <button
                         onClick={async () => {
                           const current = student.studentNumber ?? '';
@@ -319,9 +335,10 @@ const PersonnelManagement = ({
       )}
 
       <StudentDetailModal
-        isOpen={!!selectedStudentId}
-        onClose={() => setSelectedStudentId(null)}
-        studentId={selectedStudentId}
+        isOpen={!!selectedStudent}
+        onClose={() => setSelectedStudent(null)}
+        studentId={selectedStudent?.studentId}
+        onUpdate={handleStudentUpdate}
       />
     </div>
   );
