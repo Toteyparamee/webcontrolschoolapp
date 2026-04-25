@@ -42,22 +42,26 @@ const BehaviorManagement = () => {
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [studentsError, setStudentsError] = useState(null);
 
   // ===== Fetch data =====
 
   const fetchStudents = useCallback(async () => {
     if (!token) return;
     setLoadingStudents(true);
+    setStudentsError(null);
     try {
       const res = await behaviorAPI.getAllStudents(token);
       if (res.success) {
         setStudents(res.data || []);
-        // สร้างรายชื่อห้องเรียนจากข้อมูลจริง
         const rooms = [...new Set((res.data || []).map(s => s.classroom))].sort();
         setClassrooms(['ทั้งหมด', ...rooms]);
+      } else {
+        setStudentsError(res.message || 'API ตอบกลับไม่สำเร็จ');
       }
     } catch (err) {
       console.error('Failed to fetch students:', err);
+      setStudentsError(err.message || String(err));
     } finally {
       setLoadingStudents(false);
     }
@@ -357,8 +361,13 @@ const BehaviorManagement = () => {
                 })}
                 {filteredStudents.length === 0 && (
                   <div className="empty-state">
-                    <span className="empty-icon">🔍</span>
-                    <p>ไม่พบนักเรียน</p>
+                    <span className="empty-icon">{studentsError ? '⚠️' : '🔍'}</span>
+                    <p>{studentsError ? 'โหลดข้อมูลล้มเหลว' : 'ไม่พบนักเรียน'}</p>
+                    {studentsError && (
+                      <span className="empty-sub" style={{ color: '#f44336', wordBreak: 'break-word' }}>
+                        {studentsError}
+                      </span>
+                    )}
                   </div>
                 )}
               </>
