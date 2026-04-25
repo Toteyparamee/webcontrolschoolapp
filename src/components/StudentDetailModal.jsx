@@ -2,8 +2,41 @@ import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { studentAPI } from '../api/personnelApi';
 import { userAPI } from '../api/authApi';
-import { getToken } from '../api/config';
+import { getToken, API_CONFIG } from '../api/config';
 import '../css/StudentDetailModal.css';
+
+// upload รูปโปรไฟล์ไปยัง upload-service (เหมือน mobile app)
+const uploadProfileImage = async (file, studentCode) => {
+  const token = getToken();
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(
+    `${API_CONFIG.BASE_URLS.PERSONNEL}/api/upload/profile/${studentCode}`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd,
+    }
+  );
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.message || json.error || 'Upload failed');
+  }
+  const path = json.data?.url;
+  if (!path) throw new Error('Upload response missing url');
+  return path.startsWith('http') ? path : `${API_CONFIG.BASE_URLS.PERSONNEL}${path}`;
+};
+
+// fetch รูปด้วย JWT แล้วคืนเป็น blob URL (เพื่อให้ <img src> ใช้งานได้)
+const fetchImageAsBlobUrl = async (url) => {
+  const token = getToken();
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return null;
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+};
+
+const PROFILE_KEY = (code) => `profile_image_url_${code}`;
 
 // fields ที่ส่งเป็นตัวเลขเข้า backend (parseFloat ก่อนส่ง)
 const NUMBER_FIELDS = new Set([
@@ -33,6 +66,11 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
 
+  // โปรไฟล์รูป
+  const [profileBlobUrl, setProfileBlobUrl] = useState(null);   // blob ของรูปที่บันทึกไว้ (สำหรับ <img>)
+  const [pickedFile, setPickedFile] = useState(null);            // ไฟล์ที่เลือกใหม่ระหว่าง edit
+  const [pickedBlobUrl, setPickedBlobUrl] = useState(null);      // blob preview ของไฟล์ที่เลือก
+
   // Password tab state
   const [userAccount, setUserAccount] = useState(null);
   const [userLoading, setUserLoading] = useState(false);
@@ -54,8 +92,40 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
       setPasswordMsg(null);
       setIsEditing(false);
       setFormData({});
+      // cleanup blob URLs ทั้งหมด
+      setProfileBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+      setPickedBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+      setPickedFile(null);
     }
   }, [isOpen, studentId]);
+
+  // โหลดรูปโปรไฟล์ (URL cached ใน localStorage เหมือน mobile app) แล้วแปลงเป็น blob URL
+  useEffect(() => {
+    const code = student?.student_code;
+    if (!code) return;
+    const cachedUrl = localStorage.getItem(PROFILE_KEY(code));
+    if (!cachedUrl) {
+      setProfileBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+      return;
+    }
+    let cancelled = false;
+    let createdBlobUrl = null;
+    fetchImageAsBlobUrl(cachedUrl).then(blobUrl => {
+      if (cancelled) {
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+        return;
+      }
+      createdBlobUrl = blobUrl;
+      setProfileBlobUrl(prev => {
+        if (prev) URL.revokeObjectURL(prev);
+        return blobUrl;
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (createdBlobUrl) URL.revokeObjectURL(createdBlobUrl);
+    };
+  }, [student?.student_code]);
 
   const fetchStudent = async () => {
     setLoading(true);
@@ -184,23 +254,38 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
   const handleCancelEdit = () => {
     setFormData(student || {});
     setIsEditing(false);
+    // ทิ้งรูปที่เลือกใหม่
+    setPickedBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setPickedFile(null);
   };
 
   const handleFieldChange = (key, value) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = async () => {
-    if (!onUpdate) {
-      alert('ไม่สามารถบันทึกได้: ระบบไม่ได้ตั้งค่า callback');
+  const handlePickProfile = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // เคลียร์เพื่อให้เลือกไฟล์เดิมซ้ำได้
+    if (!file) return;
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type.toLowerCase())) {
+      alert('รองรับเฉพาะไฟล์ jpg, png, webp');
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      alert('ไฟล์มีขนาดเกิน 10MB');
+      return;
+    }
+    setPickedBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file); });
+    setPickedFile(file);
+  };
+
+  const handleSave = async () => {
     // build diff: เฉพาะ field ที่เปลี่ยน, ไม่รวม readonly fields
     const body = {};
     for (const [key, newVal] of Object.entries(formData)) {
       if (READONLY_FIELDS.has(key)) continue;
       const oldVal = student?.[key];
-      // ปรับ '' → null สำหรับเทียบ
       const normalizedNew = newVal === '' ? null : newVal;
       const normalizedOld = oldVal === '' || oldVal === undefined ? null : oldVal;
       if (JSON.stringify(normalizedNew) === JSON.stringify(normalizedOld)) continue;
@@ -221,16 +306,36 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
       }
     }
 
-    if (Object.keys(body).length === 0) {
+    const hasFieldChanges = Object.keys(body).length > 0;
+    const hasNewImage = !!pickedFile;
+    if (!hasFieldChanges && !hasNewImage) {
       setIsEditing(false);
+      return;
+    }
+    if (hasFieldChanges && !onUpdate) {
+      alert('ไม่สามารถบันทึกข้อมูลได้: ระบบไม่ได้ตั้งค่า callback');
       return;
     }
 
     setSaving(true);
     try {
-      await onUpdate(body);
-      // refresh จาก backend เพื่อ get ค่าใหม่จริง
-      await fetchStudent();
+      // 1) อัปโหลดรูปก่อน (ถ้ามีไฟล์ใหม่) — เก็บ URL ไว้ใน localStorage เหมือน mobile app
+      if (hasNewImage && student?.student_code) {
+        const url = await uploadProfileImage(pickedFile, student.student_code);
+        localStorage.setItem(PROFILE_KEY(student.student_code), url);
+        // โหลดรูปใหม่เป็น blob เพื่อแสดงผล
+        const blobUrl = await fetchImageAsBlobUrl(url);
+        setProfileBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return blobUrl; });
+        setPickedBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+        setPickedFile(null);
+      }
+
+      // 2) บันทึก fields อื่นๆ
+      if (hasFieldChanges) {
+        await onUpdate(body);
+        await fetchStudent();
+      }
+
       setIsEditing(false);
     } catch (err) {
       alert('บันทึกล้มเหลว: ' + (err.message || err));
@@ -524,8 +629,41 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
       {student && !loading && (
         <>
           <div className="sdm-profile-header">
-            <div className="sdm-avatar">
-              {student.first_name_th?.charAt(0) || '?'}
+            <div className="sdm-avatar" style={{ position: 'relative', overflow: 'hidden' }}>
+              {(pickedBlobUrl || profileBlobUrl) ? (
+                <img
+                  src={pickedBlobUrl || profileBlobUrl}
+                  alt="profile"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <span>{student.first_name_th?.charAt(0) || '?'}</span>
+              )}
+              {isEditing && (
+                <label
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.45)',
+                    color: '#fff',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    padding: 4,
+                  }}
+                >
+                  เปลี่ยนรูป
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handlePickProfile}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              )}
             </div>
             <div className="sdm-profile-info">
               <h3>{student.title_th} {student.first_name_th} {student.last_name_th}</h3>
