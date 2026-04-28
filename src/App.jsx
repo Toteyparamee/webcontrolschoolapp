@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { SchoolProvider } from './context/SchoolContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import AdminDashboard from './pages/AdminDashboard';
 import SchoolDetail from './pages/SchoolDetail';
 import PersonnelManagementPage from './pages/PersonnelManagementPage';
@@ -18,6 +19,7 @@ function App() {
         <SchoolProvider>
           <Routes>
             <Route path="/" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/dashboard"
               element={

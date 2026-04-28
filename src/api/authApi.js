@@ -24,6 +24,36 @@ export const authAPI = {
     return apiRequest(url, { token });
   },
 
+  // ลืมรหัสผ่าน — ขอลิงก์รีเซ็ตทาง email
+  async forgotPassword(email) {
+    const url = buildURL('LOGIN', '/server/forgot-password');
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ email }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Forgot password request failed');
+    }
+    return data;
+  },
+
+  // ตั้งรหัสผ่านใหม่ด้วย token จากอีเมล
+  async resetPassword(token, newPassword) {
+    const url = buildURL('LOGIN', '/server/reset-password');
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Reset password failed');
+    }
+    return data;
+  },
+
   // Refresh token
   async refreshToken(refreshToken) {
     const url = buildURL('LOGIN', '/server/refresh');
