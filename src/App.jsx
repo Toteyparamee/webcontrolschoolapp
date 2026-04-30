@@ -11,6 +11,7 @@ import UserManagementPage from './pages/UserManagementPage';
 import SystemSettingsPage from './pages/SystemSettingsPage';
 import BehaviorScorePage from './pages/BehaviorScorePage';
 import NewsManagementPage from './pages/NewsManagementPage';
+import EmergencyDashboard from './pages/EmergencyDashboard';
 
 function App() {
   return (
@@ -73,6 +74,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <NewsManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/emergency"
+              element={
+                <ProtectedRoute>
+                  <EmergencyDashboard />
                 </ProtectedRoute>
               }
             />

@@ -48,6 +48,12 @@ const Sidebar = () => {
       icon: '⚙️',
       label: 'ตั้งค่าระบบ',
       roles: ['admin', 'editor']
+    },
+    {
+      path: '/emergency',
+      icon: '🚨',
+      label: 'แจ้งเหตุฉุกเฉิน',
+      roles: ['admin', 'editor']
     }
   ];
 

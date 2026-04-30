@@ -1,0 +1,218 @@
+/* EmergencyDashboard — ใช้ pattern เดียวกับ AdminDashboard
+   (Sidebar fixed ซ้าย + main content) */
+
+.emergency-page {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.emergency-main {
+  flex: 1;
+  margin-left: 280px;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* ── INACTIVE STATE — ไม่มีเหตุฉุกเฉิน ── */
+
+.emergency-idle {
+  padding: 30px;
+}
+
+.emergency-idle h1 {
+  margin: 0 0 20px;
+  color: #212121;
+  font-size: 28px;
+}
+
+.emergency-status-ok {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 30px;
+  color: #1b5e20;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.emergency-history-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.emergency-history-card h2 {
+  margin: 0;
+  padding: 16px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+  color: #424242;
+}
+
+.emergency-history-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.emergency-history-card th,
+.emergency-history-card td {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.emergency-history-card th {
+  background: #fafafa;
+  color: #666;
+  font-weight: 600;
+}
+
+.emergency-history-card .empty-row td {
+  text-align: center;
+  color: #999;
+  padding: 40px 20px;
+}
+
+/* ── ACTIVE STATE — มีเหตุฉุกเฉิน ── */
+
+.emergency-active {
+  display: flex;
+  height: 100vh;
+}
+
+.emergency-map-area {
+  flex: 1;
+  position: relative;
+}
+
+.emergency-banner {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1000;
+  background: #d32f2f;
+  color: white;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+  animation: emergency-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes emergency-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(211, 47, 47, 0.8);
+  }
+}
+
+/* ── SIDEBAR ── */
+
+.emergency-sidebar {
+  width: 320px;
+  background: white;
+  border-left: 1px solid #e0e0e0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.emergency-sidebar-label {
+  font-size: 13px;
+  color: #757575;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emergency-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.emergency-stat {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.emergency-stat-label {
+  font-size: 12px;
+  color: #757575;
+  margin-bottom: 4px;
+}
+
+.emergency-stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #212121;
+}
+
+.emergency-stat-value.green   { color: #2e7d32; }
+.emergency-stat-value.red     { color: #c62828; }
+.emergency-stat-value.amber   { color: #ff8f00; }
+
+.emergency-meta {
+  font-size: 12px;
+  color: #757575;
+  margin-bottom: 8px;
+}
+
+.emergency-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-resolve,
+.btn-false-alarm {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 8px;
+  transition: opacity 0.15s;
+}
+
+.btn-resolve {
+  background: #2e7d32;
+  color: white;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.btn-resolve:hover { opacity: 0.92; }
+.btn-resolve:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-false-alarm {
+  background: white;
+  color: #757575;
+  border: 1px solid #ddd;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.btn-false-alarm:hover { background: #fafafa; }
+.btn-false-alarm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── LOADING ── */
+
+.emergency-loading {
+  padding: 40px;
+  text-align: center;
+  color: #757575;
+}
