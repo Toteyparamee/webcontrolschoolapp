@@ -23,3 +23,6 @@ export { categoryAPI, behaviorAPI } from './behaviorApi';
 
 // News (ข่าวสารและประกาศ)
 export { newsAPI } from './newsApi';
+
+// Emergency (ระบบแจ้งเหตุฉุกเฉิน)
+export { emergencyAPI } from './emergencyApi';
