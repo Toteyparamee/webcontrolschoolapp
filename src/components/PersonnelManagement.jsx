@@ -3,6 +3,7 @@ import StudentForm from './StudentForm';
 import TeacherForm from './TeacherForm';
 import StudentBatchUploadForm from './StudentBatchUploadForm';
 import StudentDetailModal from './StudentDetailModal';
+import TeacherDetailModal from './TeacherDetailModal';
 import ScheduleManagement from './ScheduleManagement';
 import BehaviorManagement from './BehaviorManagement';
 import '../css/PersonnelManagement.css';
@@ -24,6 +25,7 @@ const PersonnelManagement = ({
   const [showAddStudentMenu, setShowAddStudentMenu] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null); // { studentId, classroomId }
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   const handleAddStudent = (studentData, classroomId) => {
     onAddStudent(classroomId, studentData);
@@ -47,9 +49,22 @@ const PersonnelManagement = ({
     setEditingTeacher(null);
   };
 
-  const handleEditTeacher = (teacher) => {
-    setEditingTeacher(teacher);
-    setShowAddTeacherForm(true);
+  const handleTeacherDetailUpdate = async (teacherData) => {
+    await onUpdateTeacher(teacherData);
+    // sync local selection so modal reflects new values immediately
+    setSelectedTeacher((prev) => (prev ? {
+      ...prev,
+      teacherId: teacherData.teacher_id,
+      titleTh: teacherData.title_th,
+      firstNameTh: teacherData.first_name_th,
+      lastNameTh: teacherData.last_name_th,
+      firstNameEn: teacherData.first_name_en,
+      lastNameEn: teacherData.last_name_en,
+      address: teacherData.address,
+      phone: teacherData.phone,
+      subject: teacherData.subject,
+      homeroomClass: teacherData.homeroom_class,
+    } : prev));
   };
 
   const handleBatchUpload = async (data) => {
@@ -282,7 +297,11 @@ const PersonnelManagement = ({
           <div className="teachers-grid">
             {school.teachers.map((teacher) => (
               <div key={teacher.id} className="teacher-card">
-                <div className="person-info">
+                <div
+                  className="person-info teacher-name-link"
+                  onClick={() => setSelectedTeacher(teacher)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <h4>{teacher.firstNameTh} {teacher.lastNameTh}</h4>
                   <p className="person-name-en">{teacher.firstNameEn} {teacher.lastNameEn}</p>
                   <p className="person-detail">ที่อยู่: {teacher.address}</p>
@@ -298,10 +317,10 @@ const PersonnelManagement = ({
                 </div>
                 <div className="teacher-actions">
                   <button
-                    onClick={() => handleEditTeacher(teacher)}
+                    onClick={() => setSelectedTeacher(teacher)}
                     className="btn-edit"
                   >
-                    แก้ไข
+                    ดูข้อมูล
                   </button>
                   <button
                     onClick={() => onDeleteTeacher(teacher.id)}
@@ -339,6 +358,16 @@ const PersonnelManagement = ({
         onClose={() => setSelectedStudent(null)}
         studentId={selectedStudent?.studentId}
         onUpdate={handleStudentUpdate}
+      />
+
+      <TeacherDetailModal
+        isOpen={!!selectedTeacher}
+        onClose={() => setSelectedTeacher(null)}
+        teacher={selectedTeacher}
+        classrooms={school.classrooms || []}
+        schoolId={school.id}
+        schoolName={school.name}
+        onUpdate={handleTeacherDetailUpdate}
       />
     </div>
   );

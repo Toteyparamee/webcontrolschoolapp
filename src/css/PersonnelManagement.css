@@ -332,6 +332,19 @@
   font-size: 20px;
 }
 
+.teacher-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.teacher-actions .btn-edit,
+.teacher-actions .btn-delete {
+  margin-left: 0;
+}
+
 .person-name-en {
   color: #666;
   font-size: 14px;

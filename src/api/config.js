@@ -2,14 +2,14 @@
 
 // Environment variables
 const USE_KONG = import.meta.env.VITE_USE_KONG === 'true';
-const KONG_GATEWAY_URL = import.meta.env.VITE_KONG_GATEWAY_URL || 'https://schoolapp.parameedev.online';
+const KONG_GATEWAY_URL = import.meta.env.VITE_KONG_GATEWAY_URL || 'https://api.klasaapp.com';
 
 // Backend URLs
-const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'https://schoolapp.parameedev.online';
-const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'https://schoolapp.parameedev.online';
-const SCHEDULE_API_URL = import.meta.env.VITE_SCHEDULE_API_URL || 'https://schoolapp.parameedev.online';
-const BEHAVIOR_API_URL = import.meta.env.VITE_BEHAVIOR_API_URL || 'https://schoolapp.parameedev.online';
-const NEWS_API_URL = import.meta.env.VITE_NEWS_API_URL || 'https://schoolapp.parameedev.online';
+const LOGIN_API_URL = import.meta.env.VITE_LOGIN_API_URL || 'https://api.klasaapp.com';
+const PERSONNEL_API_URL = import.meta.env.VITE_PERSONNEL_API_URL || 'https://api.klasaapp.com';
+const SCHEDULE_API_URL = import.meta.env.VITE_SCHEDULE_API_URL || 'https://api.klasaapp.com';
+const BEHAVIOR_API_URL = import.meta.env.VITE_BEHAVIOR_API_URL || 'https://api.klasaapp.com';
+const NEWS_API_URL = import.meta.env.VITE_NEWS_API_URL || 'https://api.klasaapp.com';
 
 // Service configuration
 export const API_CONFIG = {

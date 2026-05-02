@@ -1,0 +1,351 @@
+/* Profile Header */
+.tdm-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.tdm-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4fc3f7, #1976d2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tdm-profile-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.tdm-teacher-code {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.tdm-teacher-subject {
+  margin: 2px 0 0 0;
+  color: #1976d2;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tdm-header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+/* Tabs */
+.tdm-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tdm-tab {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.tdm-tab:hover {
+  background: #e0e0e0;
+}
+
+.tdm-tab.active {
+  background: #1976d2;
+  color: white;
+}
+
+/* Tab Content */
+.tdm-tab-content {
+  animation: tdmFadeIn 0.2s ease-in;
+}
+
+@keyframes tdmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Section */
+.tdm-section-title {
+  font-size: 16px;
+  color: #333;
+  margin: 20px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.tdm-section-title:first-child {
+  margin-top: 0;
+}
+
+/* Info Row */
+.tdm-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+  gap: 12px;
+}
+
+.tdm-label {
+  color: #757575;
+  font-size: 14px;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.tdm-value {
+  color: #212121;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  word-break: break-word;
+}
+
+.tdm-edit-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.tdm-edit-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+/* Loading */
+.tdm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  color: #666;
+}
+
+.tdm-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #eee;
+  border-top: 4px solid #1976d2;
+  border-radius: 50%;
+  animation: tdmSpin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes tdmSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Account Status */
+.tdm-account-status {
+  margin-bottom: 20px;
+}
+
+.tdm-account-found,
+.tdm-account-not-found {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.tdm-account-found {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+}
+
+.tdm-account-not-found {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+}
+
+.tdm-account-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tdm-account-found .tdm-account-icon {
+  background: #4caf50;
+  color: white;
+}
+
+.tdm-account-not-found .tdm-account-icon {
+  background: #ff9800;
+  color: white;
+}
+
+.tdm-account-title {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+}
+
+.tdm-account-detail {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+/* Password Form */
+.tdm-password-form {
+  max-width: 400px;
+}
+
+.tdm-form-group {
+  margin-bottom: 16px;
+}
+
+.tdm-form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.tdm-form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.tdm-form-group input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.tdm-show-password {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.tdm-show-password input {
+  width: 16px;
+  height: 16px;
+}
+
+.tdm-password-msg {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.tdm-password-msg.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.tdm-password-msg.error {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+.tdm-save-btn {
+  padding: 10px 24px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tdm-save-btn:hover {
+  background: #1565c0;
+}
+
+.tdm-save-btn:disabled {
+  background: #bbb;
+  cursor: not-allowed;
+}
+
+/* Clickable teacher card */
+.teacher-name-link {
+  cursor: pointer;
+  color: #333;
+  transition: color 0.2s;
+}
+
+.teacher-name-link:hover {
+  color: #1976d2;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .tdm-profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .tdm-header-actions {
+    margin-left: 0;
+  }
+
+  .tdm-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tdm-info-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .tdm-value {
+    text-align: left;
+  }
+
+  .tdm-label {
+    min-width: auto;
+  }
+}
