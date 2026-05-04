@@ -1,5 +1,6 @@
 {
+  "cleanUrls": false,
   "rewrites": [
-    { "source": "/((?!account-deletion\\.html|privacy-policy\\.html|.*\\.(png|jpg|jpeg|svg|ico|json|js|css|woff|woff2|ttf|html)).*)", "destination": "/index.html" }
+    { "source": "/:path((?!.*\\.).+)", "destination": "/index.html" }
   ]
 }
