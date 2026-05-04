@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { studentAPI } from '../api/personnelApi';
 import { userAPI } from '../api/authApi';
+import { schoolAPI } from '../api/schoolApi';
 import { getToken, API_CONFIG } from '../api/config';
 import '../css/StudentDetailModal.css';
 
@@ -74,6 +75,7 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
   // Password tab state
   const [userAccount, setUserAccount] = useState(null);
   const [userLoading, setUserLoading] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordMsg, setPasswordMsg] = useState(null);
@@ -87,6 +89,7 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
       setStudent(null);
       setActiveTab('general');
       setUserAccount(null);
+      setNewUsername('');
       setNewPassword('');
       setConfirmPassword('');
       setPasswordMsg(null);
@@ -188,9 +191,12 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
       const users = res.data || res;
       const found = users.find(u => u.username === student.student_code || u.student_code === student.student_code);
       setUserAccount(found || null);
+      // ถ้ายังไม่มีบัญชี ให้ default username เป็นรหัสนักเรียน
+      if (!found) setNewUsername(student.student_code || '');
     } catch (err) {
       console.error('Failed to fetch user account:', err);
       setUserAccount(null);
+      setNewUsername(student.student_code || '');
     } finally {
       setUserLoading(false);
     }
@@ -223,14 +229,33 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
         await userAPI.updateUser(userAccount.id, { password: newPassword }, token);
         setPasswordMsg({ type: 'success', text: 'เปลี่ยนรหัสผ่านสำเร็จ' });
       } else {
+        const username = (newUsername || '').trim();
+        if (!username) {
+          setPasswordMsg({ type: 'error', text: 'กรุณากรอก Username' });
+          setPasswordSaving(false);
+          return;
+        }
+        const schoolId = student.school_id != null ? String(student.school_id) : '';
+        // ดึงชื่อโรงเรียนเพื่อบันทึกลง user
+        let schoolName = '';
+        if (schoolId) {
+          try {
+            const schoolRes = await schoolAPI.getSchool(schoolId, token);
+            schoolName = (schoolRes.data || schoolRes)?.name || '';
+          } catch (err) {
+            console.warn('Failed to fetch school name:', err);
+          }
+        }
         await userAPI.createUser({
-          username: student.student_code,
+          username,
           password: newPassword,
-          email: `${student.student_code}@student.local`,
+          email: `${username}@student.local`,
           role: 'student',
           first_name: student.first_name_th,
           last_name: student.last_name_th,
           student_code: student.student_code,
+          schoolId,
+          schoolName,
         }, token);
         setPasswordMsg({ type: 'success', text: 'สร้างบัญชีผู้ใช้และตั้งรหัสผ่านสำเร็จ' });
         fetchUserAccount();
@@ -569,6 +594,18 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
         </h3>
 
         <form onSubmit={handleSetPassword} className="sdm-password-form">
+          {!userAccount && (
+            <div className="sdm-form-group">
+              <label>Username</label>
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                placeholder="กรอก Username"
+                required
+              />
+            </div>
+          )}
           <div className="sdm-form-group">
             <label>รหัสผ่านใหม่</label>
             <input
