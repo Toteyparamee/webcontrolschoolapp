@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { scheduleAPI, getToken, API_CONFIG } from '../api';
+import { getCurrentSemester } from '../api/settingsApi';
 import '../css/TeacherSchedule.css';
 
 const TeacherSchedule = ({ teachers = [], selectedTeacher, onTeacherChange }) => {
@@ -61,9 +62,22 @@ const TeacherSchedule = ({ teachers = [], selectedTeacher, onTeacherChange }) =>
       const token = getToken();
       if (!token) { setLoading(false); return; }
 
+      // ดึง semester ปัจจุบันจาก API ถ้าไม่ได้ใช้ค่า default
+      let semester = API_CONFIG.DEFAULT_SEMESTER;
+      let academicYear = API_CONFIG.DEFAULT_ACADEMIC_YEAR;
+      try {
+        const current = await getCurrentSemester();
+        if (current?.data) {
+          semester = current.data.semester ?? semester;
+          academicYear = String(current.data.academic_year ?? academicYear);
+        }
+      } catch {
+        // ถ้าดึงไม่ได้ใช้ค่า default
+      }
+
       const data = await scheduleAPI.getSchedulesByTeacher(
         teacher.teacherCode,
-        { semester: API_CONFIG.DEFAULT_SEMESTER, academicYear: API_CONFIG.DEFAULT_ACADEMIC_YEAR },
+        { semester, academicYear },
         token
       );
 

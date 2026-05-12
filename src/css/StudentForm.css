@@ -37,6 +37,57 @@
   font-size: 14px;
 }
 
+.student-form-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.student-form-tab {
+  padding: 8px 18px;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.student-form-tab:hover {
+  color: #667eea;
+}
+
+.student-form-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+.form-section-heading {
+  padding-top: 8px;
+  color: #444;
+  font-size: 14px;
+}
+
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 .form-group input,
 .form-group textarea {
   padding: 10px;

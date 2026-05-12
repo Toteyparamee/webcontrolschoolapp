@@ -110,7 +110,8 @@ export const personnelAPI = {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to create student');
+      console.error('createStudent 400 detail:', JSON.stringify(data));
+      throw new Error(data.error || data.message || 'Failed to create student');
     }
 
     return data;
@@ -355,7 +356,8 @@ export const personnelAPI = {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to create teacher');
+      console.error('createTeacher error:', response.status, data);
+      throw new Error(data.message || data.error || 'Failed to create teacher');
     }
 
     return data;
@@ -432,6 +434,61 @@ export const classAPI = {
 
     if (!response.ok) {
       throw new Error(data.message || 'Failed to get class students');
+    }
+
+    return data;
+  },
+
+  async createClass(schoolId, grade, section, token) {
+    const response = await fetch(buildURL('PERSONNEL', '/api/v1/classes'), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ school_id: schoolId, grade, section }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create class');
+    }
+
+    return data;
+  },
+
+  async updateClass(classId, grade, section, token) {
+    const url = buildURL('PERSONNEL', `/api/v1/classes/${classId}`);
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ grade, section }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update class');
+    }
+    return data;
+  },
+
+  async deleteClass(classId, token, force = false) {
+    const url = buildURL('PERSONNEL', `/api/v1/classes/${classId}`) + (force ? '?force=true' : '');
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to delete class');
     }
 
     return data;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { schoolAPI, personnelAPI, classAPI } from '../services/api';
+import { schoolAPI, personnelAPI, classAPI, userAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 
 const SchoolContext = createContext(null);
@@ -7,12 +7,20 @@ const SchoolContext = createContext(null);
 export const SchoolProvider = ({ children }) => {
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { getValidToken, logout } = useAuth();
+  const { getValidToken, logout, user, token, isInitialized } = useAuth();
 
-  // ดึงข้อมูลจาก database เมื่อ component mount
+  // โหลดข้อมูลใหม่ทุกครั้งที่สถานะ auth เปลี่ยน (login/logout/refresh page)
   useEffect(() => {
-    fetchSchoolsData();
-  }, []);
+    if (!isInitialized) return;
+
+    if (user && token) {
+      fetchSchoolsData();
+    } else {
+      // logout → ล้างข้อมูลโรงเรียนใน state ป้องกันรั่วไปยัง user คนถัดไป
+      setSchools([]);
+      setLoading(false);
+    }
+  }, [isInitialized, user, token]);
 
   const fetchSchoolsData = async () => {
     try {
@@ -63,7 +71,7 @@ export const SchoolProvider = ({ children }) => {
 
                       return {
                         id: classData.id,
-                        name: `${classData.grade}/${classData.section}`,
+                        name: classData.section ? `${classData.grade}/${classData.section}` : classData.grade,
                         grade: classData.grade,
                         section: classData.section,
                         students: students
@@ -72,7 +80,7 @@ export const SchoolProvider = ({ children }) => {
                       console.error(`Failed to fetch students for class ${classData.id}:`, error);
                       return {
                         id: classData.id,
-                        name: `${classData.grade}/${classData.section}`,
+                        name: classData.section ? `${classData.grade}/${classData.section}` : classData.grade,
                         grade: classData.grade,
                         section: classData.section,
                         students: []
@@ -175,38 +183,107 @@ export const SchoolProvider = ({ children }) => {
     }
   };
 
-  const addStudent = async (schoolId, classroomId, student) => {
+  const addStudent = async (schoolId, classroomId, student, overrideGrade, overrideSection) => {
     try {
       const token = await getValidToken();
 
-      // Call API to save student to database
-      if (token) {
-        await personnelAPI.createStudent(student, token);
-      }
+      const currentSchool = schools.find(s => s.id === schoolId);
+      const classroom = currentSchool?.classrooms.find(c => c.id === classroomId);
 
-      // Update local state
-      setSchools(schools.map(school => {
-        if (school.id === schoolId) {
-          return {
-            ...school,
-            classrooms: school.classrooms.map(classroom => {
-              if (classroom.id === classroomId) {
-                const newStudent = {
-                  ...student,
-                  id: classroom.students.length > 0
-                    ? Math.max(...classroom.students.map(s => s.id)) + 1
-                    : 1
-                };
-                return {
-                  ...classroom,
-                  students: [...classroom.students, newStudent]
-                };
-              }
-              return classroom;
-            })
-          };
-        }
-        return school;
+      // สร้าง payload แล้วลบ key ที่เป็น null/undefined ออก
+      // เพราะ Fiber v3 strict binding จะ error ถ้า null ไปใส่ field ที่เป็น string/int ใน Go
+      const rawPayload = {
+        school_id: schoolId,
+        class_id: classroomId,
+        grade: overrideGrade ?? classroom?.grade ?? '',
+        section: overrideSection ?? classroom?.section ?? '',
+        national_id: student.nationalId || '',
+        student_code: student.studentId,
+        student_number: student.studentNumber || undefined,
+        title_th: student.titleTh || '',
+        first_name_th: student.firstNameTh,
+        last_name_th: student.lastNameTh,
+        first_name_en: student.firstNameEn || '',
+        last_name_en: student.lastNameEn || '',
+        gender: student.gender || '',
+        birth_date: student.birthDate ? `${student.birthDate}T00:00:00Z` : undefined,
+        blood_type: student.bloodType || '',
+        nationality: student.nationality || '',
+        ethnicity: student.ethnicity || '',
+        religion: student.religion || '',
+        birth_province: student.birthProvince || '',
+        house_number: student.houseNumber || '',
+        village_no: student.villageNo || '',
+        road: student.road || '',
+        sub_district: student.subDistrict || '',
+        district: student.district || '',
+        province: student.province || '',
+        postal_code: student.postalCode || '',
+        current_phone: student.currentPhone || student.phone || '',
+        weight: student.weight || undefined,
+        height: student.height || undefined,
+        distance_paved_road: student.distancePavedRoad || undefined,
+        distance_unpaved_road: student.distanceUnpavedRoad || undefined,
+        travel_time: student.travelTime || undefined,
+        travel_method: student.travelMethod || '',
+        father_title: student.fatherTitle || '',
+        father_first_name: student.fatherFirstName || student.fatherName || '',
+        father_last_name: student.fatherLastName || '',
+        father_occupation: student.fatherOccupation || '',
+        father_monthly_income: student.fatherMonthlyIncome || undefined,
+        father_phone: student.fatherPhone || '',
+        mother_title: student.motherTitle || '',
+        mother_first_name: student.motherFirstName || student.motherName || '',
+        mother_last_name: student.motherLastName || '',
+        mother_occupation: student.motherOccupation || '',
+        mother_monthly_income: student.motherMonthlyIncome || undefined,
+        mother_phone: student.motherPhone || '',
+        guardian_relationship: student.guardianRelationship || '',
+        guardian_title: student.guardianTitle || '',
+        guardian_first_name: student.guardianFirstName || '',
+        guardian_last_name: student.guardianLastName || '',
+        guardian_occupation: student.guardianOccupation || '',
+        guardian_monthly_income: student.guardianMonthlyIncome || undefined,
+        guardian_phone: student.guardianPhone || '',
+        child_order: student.childOrder || undefined,
+        older_brothers: student.olderBrothers || 0,
+        younger_brothers: student.youngerBrothers || 0,
+        older_sisters: student.olderSisters || 0,
+        younger_sisters: student.youngerSisters || 0,
+        parents_marital_status: student.parentsMaritalStatus || '',
+      };
+
+      // ลบ key ที่เป็น undefined ออกเพื่อไม่ให้ JSON.stringify ส่ง null ไป backend
+      const payload = Object.fromEntries(
+        Object.entries(rawPayload).filter(([, v]) => v !== undefined)
+      );
+
+      const response = await personnelAPI.createStudent(payload, token);
+      const created = response?.data || response;
+
+      // อัปเดต local state ด้วย id จริงจาก server
+      setSchools(prev => prev.map(school => {
+        if (school.id !== schoolId) return school;
+        return {
+          ...school,
+          classrooms: school.classrooms.map(cls => {
+            if (cls.id !== classroomId) return cls;
+            const newStudent = {
+              id: created?.id ?? (cls.students.length > 0 ? Math.max(...cls.students.map(s => s.id)) + 1 : 1),
+              studentId: created?.student_code ?? student.studentId,
+              studentNumber: created?.student_number ?? student.studentNumber ?? null,
+              firstNameTh: created?.first_name_th ?? student.firstNameTh,
+              lastNameTh: created?.last_name_th ?? student.lastNameTh,
+              firstNameEn: created?.first_name_en ?? student.firstNameEn ?? '',
+              lastNameEn: created?.last_name_en ?? student.lastNameEn ?? '',
+              phone: created?.current_phone ?? student.currentPhone ?? student.phone ?? '',
+              address: created?.house_number ?? student.houseNumber ?? '',
+              fatherName: created?.father_first_name ?? student.fatherFirstName ?? student.fatherName ?? '',
+              motherName: created?.mother_first_name ?? student.motherFirstName ?? student.motherName ?? '',
+            };
+            return { ...cls, students: [...cls.students, newStudent] };
+          }),
+        };
       }));
     } catch (error) {
       console.error('Failed to add student:', error);
@@ -278,7 +355,34 @@ export const SchoolProvider = ({ children }) => {
     }
   };
 
-  const deleteStudent = (schoolId, classroomId, studentId) => {
+  const deleteStudent = async (schoolId, classroomId, studentId, deleteUser = false) => {
+    try {
+      const token = await getValidToken();
+      await personnelAPI.deleteStudent(studentId, token);
+
+      if (deleteUser) {
+        try {
+          // หา student_code จาก local state เพื่อ lookup user
+          const currentSchool = schools.find(s => s.id === schoolId);
+          const classroom = currentSchool?.classrooms.find(c => c.id === classroomId);
+          const student = classroom?.students.find(s => s.id === studentId);
+          const studentCode = student?.studentId;
+          if (studentCode) {
+            const res = await userAPI.getUsers(token);
+            const users = res.data || res;
+            const user = users.find(u => u.username === studentCode || u.student_code === studentCode);
+            if (user) {
+              await userAPI.deleteUser(user.id, token);
+            }
+          }
+        } catch (err) {
+          console.warn('ลบ user ไม่สำเร็จ:', err);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete student:', error);
+      throw error;
+    }
     setSchools(schools.map(school => {
       if (school.id === schoolId) {
         return {
@@ -380,7 +484,24 @@ export const SchoolProvider = ({ children }) => {
             return school;
           }));
 
-          alert('บันทึกข้อมูลครูสำเร็จ');
+          // สร้าง user account ถ้ามี username/password ส่งมา
+          if (teacher.username && teacher.password && teacher.email) {
+            try {
+              await userAPI.createUser({
+                username: teacher.username,
+                email: teacher.email,
+                password: teacher.password,
+                role: 'teacher',
+                teacher_code: response.data.teacher_code,
+                schoolId: String(schoolId),
+              }, token);
+              alert('บันทึกข้อมูลครูและสร้างบัญชีผู้ใช้สำเร็จ');
+            } catch (userErr) {
+              alert('บันทึกข้อมูลครูสำเร็จ แต่สร้างบัญชีผู้ใช้ไม่ได้: ' + userErr.message);
+            }
+          } else {
+            alert('บันทึกข้อมูลครูสำเร็จ');
+          }
         }
       }
     } catch (error) {
@@ -467,43 +588,83 @@ export const SchoolProvider = ({ children }) => {
     }
   };
 
-  const addClassroom = (schoolId, classroom) => {
-    setSchools(schools.map(school => {
+  const addClassroom = async (schoolId, classroom) => {
+    const token = await getValidToken();
+    if (!token) throw new Error('No token found');
+
+    // name เช่น "ม.1/1" → grade="ม.1", section="1"
+    // ถ้าไม่มี "/" ให้ใช้ name ทั้งหมดเป็น grade และ section เป็นค่าว่าง
+    const name = classroom.name || '';
+    const slashIdx = name.lastIndexOf('/');
+    const grade = slashIdx !== -1 ? name.substring(0, slashIdx).trim() : name.trim();
+    const section = slashIdx !== -1 ? name.substring(slashIdx + 1).trim() : '';
+
+    const res = await classAPI.createClass(schoolId, grade, section, token);
+    console.log('🏫 createClass res:', res);
+    const created = res.data || res;
+    console.log('🏫 created:', created);
+
+    setSchools(prev => prev.map(school => {
       if (school.id === schoolId) {
-        const newClassroom = {
-          ...classroom,
-          id: school.classrooms.length > 0
-            ? Math.max(...school.classrooms.map(c => c.id)) + 1
-            : 1,
-          students: []
-        };
         return {
           ...school,
-          classrooms: [...school.classrooms, newClassroom]
+          classrooms: [...school.classrooms, {
+            id: created.id,
+            name: created.section ? `${created.grade}/${created.section}` : created.grade,
+            grade: created.grade,
+            section: created.section,
+            students: [],
+          }],
         };
+      }
+      return school;
+    }));
+
+    return created;
+  };
+
+  const deleteClassroom = async (schoolId, classroomId, force = false) => {
+    const token = await getValidToken();
+    if (token) {
+      await classAPI.deleteClass(classroomId, token, force);
+    }
+    setSchools(schools.map(school => {
+      if (school.id === schoolId) {
+        return { ...school, classrooms: school.classrooms.filter(c => c.id !== classroomId) };
       }
       return school;
     }));
   };
 
-  const updateClassroom = (schoolId, classroomId, updatedData) => {
-    setSchools(schools.map(school => {
-      if (school.id === schoolId) {
+  const updateClassroom = async (schoolId, classroomId, updatedData) => {
+    try {
+      const token = await getValidToken();
+      // parse name → grade/section (เหมือน addClassroom)
+      const name = updatedData.name || '';
+      const slashIdx = name.lastIndexOf('/');
+      const grade = slashIdx !== -1 ? name.substring(0, slashIdx).trim() : name.trim();
+      const section = slashIdx !== -1 ? name.substring(slashIdx + 1).trim() : '';
+      await classAPI.updateClass(classroomId, grade, section, token);
+      setSchools(prev => prev.map(school => {
+        if (school.id !== schoolId) return school;
         return {
           ...school,
           classrooms: school.classrooms.map(classroom => {
-            if (classroom.id === classroomId) {
-              return {
-                ...classroom,
-                ...updatedData
-              };
-            }
-            return classroom;
-          })
+            if (classroom.id !== classroomId) return classroom;
+            return {
+              ...classroom,
+              grade,
+              section,
+              name: section ? `${grade}/${section}` : grade,
+              ...updatedData,
+            };
+          }),
         };
-      }
-      return school;
-    }));
+      }));
+    } catch (error) {
+      console.error('Failed to update classroom:', error);
+      throw error;
+    }
   };
 
   return (
@@ -519,7 +680,8 @@ export const SchoolProvider = ({ children }) => {
       updateTeacher,
       deleteTeacher,
       addClassroom,
-      updateClassroom
+      updateClassroom,
+      deleteClassroom
     }}>
       {children}
     </SchoolContext.Provider>

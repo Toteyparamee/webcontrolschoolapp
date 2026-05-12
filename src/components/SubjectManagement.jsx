@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { subjectAPI, scheduleAPI, getToken, API_CONFIG } from '../api';
+import { useAuth } from '../context/AuthContext';
 import '../css/SubjectManagement.css';
 
 const SubjectManagement = ({ onSubjectsUpdate, selectedTeacher, teachers = [], onTeacherChange, classrooms = [] }) => {
+  const { getValidToken } = useAuth();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -173,13 +175,13 @@ const SubjectManagement = ({ onSubjectsUpdate, selectedTeacher, teachers = [], o
     }
 
     if (!formData.teacherCode || !formData.classId || !formData.dayOfWeek ||
-        !formData.period || !formData.startTime || !formData.endTime) {
+      !formData.period || !formData.startTime || !formData.endTime) {
       alert('กรุณากรอกข้อมูลตารางสอนให้ครบถ้วน');
       return;
     }
 
     try {
-      const token = getToken();
+      const token = await getValidToken();
 
       if (!token) {
         alert('กรุณาเข้าสู่ระบบก่อน');
@@ -321,7 +323,7 @@ const SubjectManagement = ({ onSubjectsUpdate, selectedTeacher, teachers = [], o
 
     // ดึงข้อมูล schedule ของรายวิชานี้จาก API
     try {
-      const token = getToken();
+      const token = await getValidToken();
       if (token && subject.id) {
         const data = await scheduleAPI.getSchedulesBySubject(subject.id, {}, token);
         console.log('Schedule data for edit:', data);
@@ -384,7 +386,7 @@ const SubjectManagement = ({ onSubjectsUpdate, selectedTeacher, teachers = [], o
   const handleDelete = async (id) => {
     if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบรายวิชานี้?')) {
       try {
-        const token = getToken();
+        const token = await getValidToken();
 
         if (!token) {
           alert('กรุณาเข้าสู่ระบบก่อน');

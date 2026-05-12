@@ -5,7 +5,7 @@ import '../css/SchoolDetail.css';
 
 const SchoolDetail = () => {
   const { schoolId } = useParams();
-  const { schools, addStudent, addStudentsBatch, updateStudent, deleteStudent, addTeacher, updateTeacher, deleteTeacher, addClassroom } = useSchool();
+  const { schools, addStudent, addStudentsBatch, updateStudent, deleteStudent, addTeacher, updateTeacher, deleteTeacher, addClassroom, deleteClassroom } = useSchool();
   const navigate = useNavigate();
 
   const school = schools.find(s => s.id === parseInt(schoolId));
@@ -21,14 +21,12 @@ const SchoolDetail = () => {
     );
   }
 
-  const handleAddStudent = (classroomId, studentData) => {
-    addStudent(school.id, classroomId, studentData);
+  const handleAddStudent = (classroomId, studentData, grade, section) => {
+    addStudent(school.id, classroomId, studentData, grade, section);
   };
 
-  const handleDeleteStudent = (classroomId, studentId) => {
-    if (window.confirm('คุณแน่ใจหรือไม่ที่จะลบนักเรียนคนนี้?')) {
-      deleteStudent(school.id, classroomId, studentId);
-    }
+  const handleDeleteStudent = (classroomId, studentId, deleteUser = false) => {
+    return deleteStudent(school.id, classroomId, studentId, deleteUser);
   };
 
   const handleUpdateStudent = (classroomId, studentId, body) => {
@@ -75,6 +73,8 @@ const SchoolDetail = () => {
           onAddTeacher={handleAddTeacher}
           onUpdateTeacher={handleUpdateTeacher}
           onDeleteTeacher={handleDeleteTeacher}
+          onAddClassroom={(data) => addClassroom(school.id, data)}
+          onDeleteClassroom={(classroomId, force) => deleteClassroom(school.id, classroomId, force)}
         />
       </div>
     </div>

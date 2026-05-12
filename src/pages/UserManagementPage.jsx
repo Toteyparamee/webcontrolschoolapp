@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { userAPI, schoolAPI } from '../services/api';
+import { userAPI, schoolAPI, personnelAPI } from '../services/api';
 import Sidebar from '../components/Sidebar';
 import '../css/UserManagementPage.css';
 
@@ -8,6 +8,7 @@ const UserManagementPage = () => {
   const { user: currentUser, token } = useAuth();
   const [users, setUsers] = useState([]);
   const [schools, setSchools] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -17,7 +18,8 @@ const UserManagementPage = () => {
     password: '',
     role: 'student',
     schoolId: '',
-    schoolName: ''
+    schoolName: '',
+    teacher_code: ''
   });
   const [filterRole, setFilterRole] = useState('all');
   const [filterClass, setFilterClass] = useState('all');
@@ -50,6 +52,16 @@ const UserManagementPage = () => {
     }
   };
 
+  const fetchTeachers = async (schoolId) => {
+    try {
+      const response = await personnelAPI.getTeachers(token, schoolId || undefined);
+      setTeachers(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch teachers:', error);
+      setTeachers([]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -68,7 +80,8 @@ const UserManagementPage = () => {
         password: '',
         role: 'student',
         schoolId: '',
-        schoolName: ''
+        schoolName: '',
+        teacher_code: ''
       });
       fetchUsers();
     } catch (error) {
@@ -84,7 +97,8 @@ const UserManagementPage = () => {
       password: '',
       role: user.role,
       schoolId: user.schoolId || '',
-      schoolName: user.schoolName || ''
+      schoolName: user.schoolName || '',
+      teacher_code: user.teacher_code || ''
     });
     setShowAddForm(true);
   };
@@ -110,7 +124,8 @@ const UserManagementPage = () => {
       password: '',
       role: 'student',
       schoolId: '',
-      schoolName: ''
+      schoolName: '',
+      teacher_code: ''
     });
   };
 
@@ -290,7 +305,11 @@ const UserManagementPage = () => {
                   <label>บทบาท *</label>
                   <select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    onChange={(e) => {
+                      const role = e.target.value;
+                      setFormData({ ...formData, role, teacher_code: '' });
+                      if (role === 'teacher') fetchTeachers(formData.schoolId);
+                    }}
                     required
                   >
                     <option value="student">นักเรียน</option>
@@ -299,6 +318,33 @@ const UserManagementPage = () => {
                     <option value="admin">ผู้ดูแลระบบ</option>
                   </select>
                 </div>
+
+                {formData.role === 'teacher' && (
+                  <div className="form-group">
+                    <label>เลือกครู *</label>
+                    <select
+                      value={formData.teacher_code}
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        const teacher = teachers.find(t => t.teacher_code === code);
+                        setFormData({
+                          ...formData,
+                          teacher_code: code,
+                          first_name: teacher?.first_name_th || formData.first_name,
+                          last_name: teacher?.last_name_th || formData.last_name,
+                        });
+                      }}
+                      required
+                    >
+                      <option value="">-- เลือกครู --</option>
+                      {teachers.map((t) => (
+                        <option key={t.teacher_code} value={t.teacher_code}>
+                          {t.title_th}{t.first_name_th} {t.last_name_th} ({t.teacher_code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>โรงเรียน (ถ้ามี)</label>
@@ -310,8 +356,10 @@ const UserManagementPage = () => {
                       setFormData({
                         ...formData,
                         schoolId: selectedSchoolId,
-                        schoolName: selectedSchool ? selectedSchool.name : ''
+                        schoolName: selectedSchool ? selectedSchool.name : '',
+                        teacher_code: ''
                       });
+                      if (formData.role === 'teacher') fetchTeachers(selectedSchoolId);
                     }}
                   >
                     <option value="">-- เลือกโรงเรียน --</option>

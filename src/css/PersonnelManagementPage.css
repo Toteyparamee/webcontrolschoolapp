@@ -370,8 +370,36 @@
   margin: 3px 0;
 }
 
+.btn-view-student {
+  padding: 6px 12px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+.btn-view-student:hover { background-color: #1565c0; }
+
+.btn-edit-number {
+  padding: 6px 12px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+.btn-edit-number:hover { background-color: #f57c00; }
+
 .btn-delete {
-  padding: 8px 16px;
+  padding: 6px 12px;
   background-color: #f44336;
   color: white;
   border: none;
@@ -381,7 +409,6 @@
   font-weight: 500;
   transition: background-color 0.3s;
   flex-shrink: 0;
-  margin-left: 10px;
 }
 
 .btn-delete:hover {

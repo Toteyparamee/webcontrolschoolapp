@@ -29,9 +29,15 @@ export const studentAPI = {
     });
   },
 
-  // Get student by ID
+  // Get student by numeric DB ID
   async getStudent(id, token) {
     const url = buildURL('PERSONNEL', `/api/v1/students/${id}`);
+    return apiRequest(url, { token });
+  },
+
+  // Get student by student_code (preferred — stable identifier)
+  async getStudentByCode(studentCode, token) {
+    const url = buildURL('PERSONNEL', `/api/v1/students/by-code/${studentCode}`);
     return apiRequest(url, { token });
   },
 
@@ -179,6 +185,12 @@ export const classAPI = {
   async getClassStudents(classId, token) {
     const url = buildURL('PERSONNEL', `/api/v1/classes/${classId}/students`);
     return apiRequest(url, { token });
+  },
+
+  // Delete class
+  async deleteClass(classId, token) {
+    const url = buildURL('PERSONNEL', `/api/v1/classes/${classId}`);
+    return apiRequest(url, { method: 'DELETE', token });
   },
 };
 

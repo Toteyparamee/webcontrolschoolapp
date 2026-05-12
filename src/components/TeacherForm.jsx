@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../css/TeacherForm.css';
 
-const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTeacher }) => {
+const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTeacher, existingTeacherCodes = [] }) => {
   // รายการคำนำหน้า
   const titleOptions = ['นาย', 'นาง', 'นางสาว', 'ผศ.', 'อ.', 'ดร.'];
 
@@ -26,7 +26,7 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
   ];
 
   const [formData, setFormData] = useState({
-    teacher_id: '',
+    teacher_code: '',
     title_th: '',
     first_name_th: '',
     last_name_th: '',
@@ -36,7 +36,10 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
     phone: '',
     subject: '',
     homeroom_class: '',
-    school_id: schoolId
+    school_id: schoolId,
+    username: '',
+    password: '',
+    email: ''
   });
 
   // Update school_id เมื่อ schoolId prop เปลี่ยน
@@ -51,7 +54,7 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
   useEffect(() => {
     if (editingTeacher) {
       setFormData({
-        teacher_id: editingTeacher.teacherId || '',
+        teacher_code: editingTeacher.teacherId || '',
         title_th: editingTeacher.titleTh || '',
         first_name_th: editingTeacher.firstNameTh || '',
         last_name_th: editingTeacher.lastNameTh || '',
@@ -77,13 +80,16 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ตรวจสอบว่าเลือกวิชา
     if (!formData.subject) {
       alert('กรุณาเลือกวิชาที่สอน');
       return;
     }
 
-    // ส่งข้อมูลพร้อม id ถ้าเป็นการแก้ไข
+    if (!editingTeacher && existingTeacherCodes.includes(formData.teacher_code)) {
+      alert(`รหัสครู "${formData.teacher_code}" มีอยู่แล้วในระบบ กรุณาใช้รหัสอื่น`);
+      return;
+    }
+
     if (editingTeacher) {
       onSubmit({ ...formData, id: editingTeacher.id });
     } else {
@@ -92,7 +98,7 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
 
     // Reset form
     setFormData({
-      teacher_id: '',
+      teacher_code: '',
       title_th: '',
       first_name_th: '',
       last_name_th: '',
@@ -102,7 +108,10 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
       phone: '',
       subject: '',
       homeroom_class: '',
-      school_id: schoolId
+      school_id: schoolId,
+      username: '',
+      password: '',
+      email: ''
     });
   };
 
@@ -115,8 +124,8 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
           <label>รหัสครู *</label>
           <input
             type="text"
-            name="teacher_id"
-            value={formData.teacher_id}
+            name="teacher_code"
+            value={formData.teacher_code}
             onChange={handleChange}
             placeholder="เช่น T001"
             required
@@ -234,6 +243,49 @@ const TeacherForm = ({ onSubmit, onCancel, classrooms = [], schoolId, editingTea
           </select>
         </div>
       </div>
+
+      {!editingTeacher && (
+        <>
+          <h4 style={{ marginTop: '16px', marginBottom: '8px' }}>บัญชีผู้ใช้งาน</h4>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>ชื่อผู้ใช้ *</label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="username"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>อีเมล *</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="email@example.com"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>รหัสผ่าน *</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="รหัสผ่าน"
+                required
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="form-actions">
         <button type="submit" className="btn-submit">บันทึก</button>

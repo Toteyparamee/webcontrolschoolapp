@@ -416,3 +416,98 @@
   color: #2196F3;
   margin-right: 8px;
 }
+
+.manual-add-wrapper {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.classroom-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.manual-add-classroom-select {
+  margin-bottom: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 12px;
+}
+
+.no-classroom-notice {
+  text-align: center;
+  padding: 16px 0;
+  color: #666;
+}
+
+.no-classroom-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.new-classroom-student-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+.student-row-number {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  min-width: 52px;
+  padding-top: 8px;
+}
+
+.student-row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.student-row-fields input {
+  flex: 1 1 140px;
+  padding: 7px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.btn-remove-student {
+  background: none;
+  border: none;
+  color: #e53935;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+}
+
+.btn-add-row {
+  margin-top: 4px;
+  background: none;
+  border: 1px dashed #2196F3;
+  color: #2196F3;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-add-row:hover {
+  background: #e3f2fd;
+}

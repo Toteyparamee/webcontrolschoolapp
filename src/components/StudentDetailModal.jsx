@@ -402,6 +402,7 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
       return (
         <div className="sdm-section">
           <h3 className="sdm-section-title">ข้อมูลส่วนตัว</h3>
+          {renderEditRow('เลขบัตรประชาชน', 'national_id')}
           {renderEditRow('คำนำหน้า (ไทย)', 'title_th')}
           {renderEditRow('ชื่อ (ไทย)', 'first_name_th')}
           {renderEditRow('นามสกุล (ไทย)', 'last_name_th')}
@@ -428,6 +429,7 @@ const StudentDetailModal = ({ isOpen, onClose, studentId, onUpdate }) => {
     return (
       <div className="sdm-section">
         <h3 className="sdm-section-title">ข้อมูลส่วนตัว</h3>
+        {renderInfoRow('เลขบัตรประชาชน', student.national_id || '-')}
         {renderInfoRow('ชื่อ-นามสกุล (ไทย)', `${student.title_th || ''} ${student.first_name_th || ''} ${student.last_name_th || ''}`.trim())}
         {renderInfoRow('ชื่อ-นามสกุล (อังกฤษ)', `${student.first_name_en || ''} ${student.last_name_en || ''}`.trim() || '-')}
         {renderInfoRow('รหัสนักเรียน', student.student_code)}
